@@ -30,10 +30,6 @@ from google.assistant.library.file_helpers import existing_file
 
 
 def process_event(event):
-    from pygame import mixer
-    mixer.init() 
-    alert=mixer.Sound('bell.wav')
-    alert.play()
     """Pretty prints events.
 
     Prints all events that occur with two spaces between each new
@@ -44,6 +40,10 @@ def process_event(event):
     """
     if event.type == EventType.ON_CONVERSATION_TURN_STARTED:
         print()
+        import subprocess
+        subprocess.call(['aplay','--format=S16_LE','--rate=21000','/home/pi/audios/ack.raw'])
+
+        
 
     print(event)
 
