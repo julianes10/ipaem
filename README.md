@@ -37,6 +37,10 @@ TODO
 [Google Cloud sdk][https://cloud.google.com/sdk/docs/?hl=es]
 [Google assistant SDK][https://developers.google.com/assistant/sdk/]
 [JASPER][https://jasperproject.github.io/]
+[AIA project voice kit][https://aiyprojects.withgoogle.com/]
+[wikipedia][https://en.wikipedia.org/wiki/List_of_speech_recognition_software]
+[Shazam like][http://royvanrijn.com/blog/2010/06/creating-shazam-in-java/]
+
 
 
 
