@@ -1,0 +1,19 @@
+{
+  "log": { "logTraces":"/tmp/ipaem.log",
+           "logExceptions":"/tmp/ipaem.log"
+  },
+  "LocalActions" : {
+      "Test":  {   "input":"test",
+                   "output":{  "cmd": "aplay --format=S16_LE --rate=16000 /home/pi/audios/test.raw",
+                               "feedback": "ack",
+                               "next" :"end"
+                            }
+               },
+      "Test2":  {   "input":"hello",
+                   "output":{  "cmd": "aplay --format=S16_LE --rate=16000 /home/pi/audios/torpedo.raw",
+                               "feedback": "ack",
+                               "next" :"end"
+                            }
+               }
+  }
+}

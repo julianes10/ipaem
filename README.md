@@ -30,7 +30,14 @@ https://github.com/claritylab/lucida  http://lucida.ai/
 TODO
 
 ## The project
-TODO 
+So far, the idea is having config file to trigger actions besides default actions from GA.
+In the config file will be possible run external commands, give feedback sound, etc
+### Install dir
+Stuff for deploying the software and create a service
+### gaIpadispacher
+Python scripts based on google assistant sdk that process and triggger actions using ga and the config file
+### etc
+Example of config file. It will be copy to /etc/ipaem when deploy the software
 
 ## Intersting links
 [Google products for developers][https://developers.google.com/]
@@ -40,6 +47,15 @@ TODO
 [AIA project voice kit][https://aiyprojects.withgoogle.com/]
 [wikipedia][https://en.wikipedia.org/wiki/List_of_speech_recognition_software]
 [Shazam like][http://royvanrijn.com/blog/2010/06/creating-shazam-in-java/]
+
+## TODO
+Process config file
+Upload sounds
+Try trigger youtoube
+Try trigger radio online
+dockerizate it
+Try to change hotword
+
 
 
 

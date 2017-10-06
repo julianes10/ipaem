@@ -1,0 +1,14 @@
+[Unit]
+Description= IPAEM is a Intelligent Personal Asisstant for EM
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/opt/ipaem/ipaem.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+
+
+
