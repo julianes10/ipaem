@@ -21,6 +21,7 @@ from __future__ import print_function
 import argparse
 import os.path
 import json
+import threading
 
 
 import google.oauth2.credentials
@@ -40,50 +41,72 @@ import helper
 
 from helper import *
 
-configuration={}
+class Ga(object):
+    def __init__(self):
+        self.busy = True
+    def setBusy(self,value):
+        self.busy = value
+    def getBusy(self):
+        return self.busy
+   
 
 
-def process_event(event):
-    """Pretty prints events.
-
-    Prints all events that occur with two spaces between each new
-    conversation and a single space between turns of a conversation.
-
-    Args:
-        event(event.Event): The current event to process.
-    """
-    if event.type == EventType.ON_CONVERSATION_TURN_STARTED:
-        print()
-        import subprocess
-        subprocess.call(['aplay','--format=S16_LE','--rate=21000','/home/pi/audios/ack.raw'])
-       
-
-    print(event)
-
-    if event.type == EventType.ON_RECOGNIZING_SPEECH_FINISHED:
-        if event.args['text'] == "start":
-            print("------------------------- got it star¡¡¡¡")
-            return 1
-        if event.args['text'] == "1":
-            print("------------------------- got it 1¡¡¡¡")
-            return 1
-        if event.args['text'] == "2":
-            print("------------------------- got it 2¡¡¡¡")
-            return 1
-        if event.args['text'] == "3":
-            print("------------------------- got it 3¡¡¡¡")
-            return 2       
-        elif event.args['text'] == "stop":
-            print("----------------- got it radio¡¡¡¡")
-            return 2
-
-    if (event.type == EventType.ON_CONVERSATION_TURN_FINISHED and
-            event.args and not event.args['with_follow_on_turn']):
-        print()
+def runAction(action):
+    helper.internalLogger.debug("Running '{0}'".format(action))
+    if "background" in action:
+      if action["background"]:
+        subprocess.Popen(['bash','-c',action["cmd"]])
+        return action["next"]
     
+    #else blocking
+    subprocess.call(['bash','-c',action["cmd"]])
+    
+
+    return action["next"]
+
+def checkAnswer(actions,text):
+    helper.internalLogger.debug("Checking '{0}' on local actions {1}...".format(text,actions))
+    if text is None:
+      return None
+    if text=="":
+      return None
+   
+    for key,item in actions.items():
+      helper.internalLogger.debug("Trying to match {0} on action {1}".format(text,key))
+      if text.lower() in item['input'] or item['input'] in text.lower():
+         helper.internalLogger.debug("Action found over '{0}': {1}".format(text,key))         
+         return runAction(item['output'])
+  
+    helper.internalLogger.debug("No action found over '{0}'".format(text))
+    return None
+
+def process_event(cfg_Actions,event,ga):
+
+    helper.internalLogger.debug("Processing event:{0}...".format(event))
+
+    if event.type == EventType.ON_CONVERSATION_TURN_STARTED:
+        ga.setBusy(True)
+        helper.internalLogger.debug("Please say something")
+        subprocess.call(['aplay','--format=S16_LE','--rate=21000','/home/pi/audios/ack.raw'])       
+    elif event.type == EventType.ON_RECOGNIZING_SPEECH_FINISHED:
+        helper.internalLogger.debug("Let's process what google say you have said")
+        return checkAnswer(cfg_Actions,event.args['text'])
+    elif event.type == EventType.ON_START_FINISHED:
+        ga.setBusy(False)
+    elif event.type == EventType.ON_CONVERSATION_TURN_FINISHED:
+        ga.setBusy(False)
+    elif event.type == EventType.ON_ASSISTANT_ERROR and event.args and event.args['is_fatal']:
+        helper.internalLogger.critical("Error, exiting")
+        sys.exit(1)
+
+
+    '''    if (event.type == EventType.ON_CONVERSATION_TURN_FINISHED and
+            event.args and not event.args['with_follow_on_turn']):
+        helper.internalLogger.debug("ON_CONVERSATION_TURN_FINISHED with_follow_on_turn")
+    ''' 
+
+
     return 0
-
-
 
 '''----------------------------------------------------------'''
 '''----------------       M A I N         -------------------'''
@@ -92,11 +115,11 @@ def process_event(event):
 def main(configfile,cred):
   print('IPAEM-start -----------------------------')   
 
+  ga=Ga()
   # Loading config file,
   # Default values
   cfg_log_traces="ipaem.log"
   cfg_log_exceptions="ipaeme.log"
-  cfg_Actions={}
   # Let's fetch data
   with open(configfile) as json_data:
       configuration = json.load(json_data)
@@ -107,42 +130,61 @@ def main(configfile,cred):
       if "logExceptions" in configuration["log"]:
         cfg_log_exceptions = configuration["log"]["logExceptions"]
   helper.init(cfg_log_traces,cfg_log_exceptions)
-  print('See logs traces in: {0} and exeptions in: {1}-----------'.format(cfg_log_traces,cfg_log_exceptions))  
+  helper.internalLogger.debug('See logs traces in: {0} and exeptions in: {1}-----------'.format(cfg_log_traces,cfg_log_exceptions))  
   helper.internalLogger.critical('IPAEM-start -------------------------------')  
   helper.einternalLogger.critical('IPAEM-start -------------------------------')
   try:
-    #Get sensors list
-    cfg_Actions = configuration["LocalActions"]
-
+      cfg_Actions = configuration["LocalActions"]
+      helper.internalLogger.debug("Local actions {0}...".format(cfg_Actions))
   except Exception as e:
-    helper.internalLogger.critical("Error processing configuration json {0} file. Exiting".format(configfile))
-    helper.einternalLogger.exception(e)
-    loggingEnd()
-    return  
+      helper.internalLogger.critical("Error processing configuration json {0} file. No action".format(configfile))
+      helper.einternalLogger.exception(e)
+      loggingEnd()
+      return 0
+
 
   try:
     with open(cred, 'r') as f:
          credentials = google.oauth2.credentials.Credentials(token=None,
                                                             **json.load(f))      
     with Assistant(credentials) as assistant:
-        for event in assistant.start():
-            result=process_event(event)
-            if result==1:
-                print('Start conversation')
-                assistant.start_conversation()
-            elif result==2:
+      ### Now let's run in background alternative ways to 'ok google' speech
+      triggerTask=threading.Thread(target=trigger_task,args=(assistant,ga,),name="theOtherTrigger")
+      triggerTask.daemon = True
+      triggerTask.start()
+      for event in assistant.start():
+            result=process_event(cfg_Actions,event,ga)
+            if result == "end":
+                helper.internalLogger.debug('Stop conversation')
                 assistant.stop_conversation()
-            else: # 0 or other
-                print('Waiting next event')
+            elif result == "chat":
+                helper.internalLogger.debug('Start conversation')
+                assistant.start_conversation()
+            else: # none or other
+                helper.internalLogger.debug('Waiting next event')
 
 
   except Exception as e:
     e = sys.exc_info()[0]
     helper.internalLogger.critical('Error: Exception unprocessed properly. Exiting')
     helper.einternalLogger.exception(e)  
-    print('IPAEM-General exeception captured. See ssms.log:{0}',format(cfg_log_exceptions))        
+    helper.internalLogger.debug('IPAEM-General exeception captured. See ssms.log:{0}',format(cfg_log_exceptions))        
     loggingEnd()
 
+
+
+'''----------------------------------------------------------'''
+'''----------------      trigger_task     -------------------'''
+def trigger_task(assistant,ga):
+  helper.internalLogger.debug("Waiting other trigger...")
+  while True:
+    time.sleep(15) 
+    if ga.getBusy()==False:
+      helper.internalLogger.debug("fake trigger NOW")
+      assistant.start_conversation()
+    else:
+      helper.internalLogger.debug("fake trigger not NOW, conversation ongoing")
+   
 
 '''----------------------------------------------------------'''
 '''----------------       loggingEnd      -------------------'''
@@ -165,7 +207,7 @@ def parse_args():
     parser.add_argument('--credentials', type=existing_file,
                         metavar='OAUTH2_CREDENTIALS_FILE',
                         default=os.path.join(
-                            os.path.expanduser('/home/pi/.config'),
+                            os.path.expanduser('/etc/ipaem/'),
                             'google-oauthlib-tool',
                             'credentials.json'
                         ),
@@ -173,7 +215,7 @@ def parse_args():
     return parser.parse_args()
 
 '''----------------------------------------------------------'''
-'''----------------    printPlatformInfo  -------------------'''
+'''----------------    helper.internalLogger.debugPlatformInfo  -------------------'''
 def printPlatformInfo():
     print("Running on OS '{0}' release '{1}' platform '{2}'.".format(os.name,platform.system(),platform.release()))
     print("Uname raw info: {0}".format(os.uname()))

@@ -40,13 +40,13 @@ Python scripts based on google assistant sdk that process and triggger actions u
 Example of config file. It will be copy to /etc/ipaem when deploy the software
 
 ## Intersting links
-[Google products for developers][https://developers.google.com/]
-[Google Cloud sdk][https://cloud.google.com/sdk/docs/?hl=es]
-[Google assistant SDK][https://developers.google.com/assistant/sdk/]
-[JASPER][https://jasperproject.github.io/]
-[AIA project voice kit][https://aiyprojects.withgoogle.com/]
-[wikipedia][https://en.wikipedia.org/wiki/List_of_speech_recognition_software]
-[Shazam like][http://royvanrijn.com/blog/2010/06/creating-shazam-in-java/]
+-[Google products for developers][https://developers.google.com/]
+-[Google Cloud sdk][https://cloud.google.com/sdk/docs/?hl=es]
+-[Google assistant SDK][https://developers.google.com/assistant/sdk/]
+-[JASPER][https://jasperproject.github.io/]
+-[AIA project voice kit][https://aiyprojects.withgoogle.com/]
+-[wikipedia][https://en.wikipedia.org/wiki/List_of_speech_recognition_software]
+-[Shazam like][http://royvanrijn.com/blog/2010/06/creating-shazam-in-java/]
 
 ## TODO
 Process config file
