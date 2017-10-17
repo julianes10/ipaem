@@ -48,6 +48,7 @@ Example of config file. It will be copy to /etc/ipaem when deploy the software
 * [wikipedia](https://en.wikipedia.org/wiki/List_of_speech_recognition_software)
 * [Shazam like](http://royvanrijn.com/blog/2010/06/creating-shazam-in-java/)
 * [Customize hotword](https://snowboy.kitt.ai)
+* [Python flask REST API tutorial](https://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask)
 
 ## TODO
 Process config file
