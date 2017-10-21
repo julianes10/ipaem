@@ -50,13 +50,17 @@ Example of config file. It will be copy to /etc/ipaem when deploy the software
 * [Customize hotword](https://snowboy.kitt.ai)
 * [Python flask REST API tutorial](https://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask)
 
+## SDR in pi
+One of the target is listen radio on Pi, interfacing of course using voice.
+A bit rid of inestability of online radio, I considered tune FM radio using SDR device
+
 ## TODO
 Process config file
 Upload sounds
 Try trigger youtoube
 Try trigger radio online
 dockerizate it
-Try to change hotword
+Try to change hotword 
 
 
 
