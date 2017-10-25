@@ -15,13 +15,13 @@
 # limitations under the License.
 #
 # Custom adaptations
-
 from __future__ import print_function
 
 import argparse
 import os.path
 import json
 import threading
+
 
 
 import google.oauth2.credentials
@@ -41,6 +41,39 @@ import helper
 
 from helper import *
 
+from flask import Flask, jsonify,abort,make_response,request, url_for
+
+
+
+'''----------------------------------------------------------'''
+'''----------------      API REST         -------------------'''
+'''----------------------------------------------------------'''
+api = Flask("api")
+
+
+@api.route('/ipaem/api/v1.0/hotword', methods=['GET'])
+def get_hotword():
+    rt=jsonify({'result': 'KO'})
+    if ga.getBusy()==False:
+      helper.internalLogger.debug("Alternative hotword")
+      assistant.start_conversation()
+      rt=jsonify({'result': 'OK'})
+    else:
+      helper.internalLogger.debug("Alternative hotword ignored, conversation already ongoing")
+    return rt
+
+
+@api.route('/ipaem/api/v1.0/localaction', methods=['POST'])
+def post_localaction():
+    rt=jsonify({'result': 'TODO'})
+    if not request.json or not 'input' in request.json:
+        abort(400)
+    #TBD 
+    return rt, 201
+
+'''----------------------------------------------------------'''
+'''----------------      GA control object  -----------------'''
+
 class Ga(object):
     def __init__(self):
         self.busy = True
@@ -49,7 +82,8 @@ class Ga(object):
     def getBusy(self):
         return self.busy
    
-
+'''----------------------------------------------------------'''
+'''----------------    runAction            -----------------'''
 
 def runAction(action):
     helper.internalLogger.debug("Running '{0}'".format(action))
@@ -63,6 +97,9 @@ def runAction(action):
     
 
     return action["next"]
+
+'''----------------------------------------------------------'''
+'''----------------    checkAnswer          -----------------'''
 
 def checkAnswer(actions,text):
     helper.internalLogger.debug("Checking '{0}' on local actions {1}...".format(text,actions))
@@ -79,6 +116,9 @@ def checkAnswer(actions,text):
   
     helper.internalLogger.debug("No action found over '{0}'".format(text))
     return None
+
+'''----------------------------------------------------------'''
+'''----------------    process_event        -----------------'''
 
 def process_event(cfg_Actions,event,ga):
 
@@ -115,7 +155,10 @@ def process_event(cfg_Actions,event,ga):
 def main(configfile,cred):
   print('IPAEM-start -----------------------------')   
 
+  global ga
+  global assistant
   ga=Ga()
+
   # Loading config file,
   # Default values
   cfg_log_traces="ipaem.log"
@@ -149,9 +192,9 @@ def main(configfile,cred):
                                                             **json.load(f))      
     with Assistant(credentials) as assistant:
       ### Now let's run in background alternative ways to 'ok google' speech
-      triggerTask=threading.Thread(target=trigger_task,args=(assistant,ga,),name="theOtherTrigger")
-      triggerTask.daemon = True
-      triggerTask.start()
+      apiRestTask=threading.Thread(target=apirest_task,args=(assistant,ga,),name="theOtherTrigger")
+      apiRestTask.daemon = True
+      apiRestTask.start()
       for event in assistant.start():
             result=process_event(cfg_Actions,event,ga)
             if result == "end":
@@ -172,19 +215,11 @@ def main(configfile,cred):
     loggingEnd()
 
 
-
 '''----------------------------------------------------------'''
-'''----------------      trigger_task     -------------------'''
-def trigger_task(assistant,ga):
-  helper.internalLogger.debug("Waiting other trigger...")
-  while True:
-    time.sleep(15) 
-    if ga.getBusy()==False:
-      helper.internalLogger.debug("fake trigger NOW")
-      assistant.start_conversation()
-    else:
-      helper.internalLogger.debug("fake trigger not NOW, conversation ongoing")
-   
+'''----------------     apirest_task      -------------------'''
+def apirest_task(assistant,ga):
+  api.run(debug=True, use_reloader=False)
+
 
 '''----------------------------------------------------------'''
 '''----------------       loggingEnd      -------------------'''
