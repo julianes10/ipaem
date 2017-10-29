@@ -10,17 +10,24 @@ fi
 if [ ! -f /etc/ipaem/ipaem.conf ]; then
   echo "Taking config file example as configuration file in /etc/ipaem/, please review it and restart the service"
   mkdir -p /etc/ipaem
-  cp -rf etc/ipaem.conf.example /etc/ipaem/ipaem.conf
+  cp -rf ../etc/ipaem.conf.example /etc/ipaem/ipaem.conf
 else
-  echo "Keeping existing configuration file in /etc/ipaem/. Only updating example one"
-  cp -rf etc/ipaem.conf.example /etc/ipaem/
-fi 
-cp -rf ipaem.service /lib/systemd/system/ipaem.service
-chmod 644 /lib/systemd/system/ipaem.service
+  echo "Keeping existing configuration file in /etc/ipaem/. In opt theres is a modern example one"
+fi
+
+cp -rf ../etc/HIDDEN.asoundrc /root/.asoundrc
+ 
+cp -rf ipaemg.service /lib/systemd/system/ipaemg.service
+cp -rf ipaems.service /lib/systemd/system/ipaems.service
+chmod 644 /lib/systemd/system/ipaemg.service
+chmod 644 /lib/systemd/system/ipaems.service
 systemctl daemon-reload
-systemctl enable ipaem.service
-systemctl start ipaem.service
-systemctl status ipaem.service
+systemctl enable ipaemg.service
+systemctl enable ipaems.service
+systemctl start ipaemg.service
+systemctl start ipaems.service
+systemctl status ipaemg.service
+systemctl status ipaems.service
 
 echo "Remember cheatsheet:"
 echo "  Check status: sudo systemctl status ipaem.service"

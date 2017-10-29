@@ -4,7 +4,7 @@ After=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/opt/ipaem/ipaem.sh
+ExecStart=/opt/ipaem/ipaem.s.sh
 Restart=on-failure
 
 [Install]
