@@ -1,0 +1,9 @@
+import tuneinWrapper
+from tuneinWrapper import *
+def main():
+
+    test=TuneInRadio()
+    test.run("BBC")
+    print("Hello")
+if __name__ == '__main__':
+    main()
