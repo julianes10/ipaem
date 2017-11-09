@@ -1,6 +1,37 @@
 # ipaem
 Small project to manage home devices exploring IPA technologies
 
+So far, the idea is having config file to trigger actions besides default actions from GA.
+In the config file will be possible run external commands, give feedback sound, etc
+
+
+## Instalation
+Follow requirements.txt instruction to install from a vanilla raspbian without desktop.
+
+Download or clone this repo and: 
+cd ipaem/install
+sudo ./install local
+cd /opt/ipaem/install
+sudo ./setupService.sh
+It setup two services ipaemg (tuned google assistant app) and ipaems (snowboy alternatives hot words)
+Config files are in /etc/ipaem/ you can custome it
+
+## Source code walkthrough
+TODO, complete¡¡¡
+
+### Install dir
+Stuff for deploying the software and create a service
+### gaIpadispacher
+Python scripts based on google assistant sdk that process and triggger actions using ga and the config file. RESTapi available.
+
+### snowboyHotwords
+Python scripts based on snowboy demo, it detects hotwords and RESTapi to communicate to previous service to start ga conversation or trigger directly actions.
+
+### etc
+Example of config file. It will be copy to /etc/ipaem when deploy the software
+
+
+
 ## Benchmark study
 Quick analysis trying to see what is the state of the art at september 2017
 Disclaimer: if something is incorrect bellow, just consider that the trial consist basically in 4-6 hours...
@@ -27,17 +58,8 @@ Good idea, but project is huge, maybe too much for my target. Apart of this it s
 https://github.com/claritylab/lucida  http://lucida.ai/
 
 ### Conclusion
-TODO
+Lots of possibilities, some extra tuning for raspberry but still feasible.
 
-## The project
-So far, the idea is having config file to trigger actions besides default actions from GA.
-In the config file will be possible run external commands, give feedback sound, etc
-### Install dir
-Stuff for deploying the software and create a service
-### gaIpadispacher
-Python scripts based on google assistant sdk that process and triggger actions using ga and the config file
-### etc
-Example of config file. It will be copy to /etc/ipaem when deploy the software
 
 ## Intersting links
 * [Google products for developers](https://developers.google.com/)
@@ -55,12 +77,10 @@ One of the target is listen radio on Pi, interfacing of course using voice.
 A bit rid of inestability of online radio, I considered tune FM radio using SDR device
 
 ## TODO
-Process config file
 Upload sounds
 Try trigger youtoube
 Try trigger radio online
 dockerizate it
-Try to change hotword 
 
 
 
