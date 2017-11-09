@@ -16,18 +16,28 @@ else
 fi
 
 cp -rf ../etc/HIDDEN.asoundrc /root/.asoundrc
+cp -rf ../etc/HIDDEN.asoundrc /home/pi/.asoundrc
+
  
 cp -rf ipaemg.service /lib/systemd/system/ipaemg.service
 cp -rf ipaems.service /lib/systemd/system/ipaems.service
+cp -rf kodi.service /lib/systemd/system/kodi.service
 chmod 644 /lib/systemd/system/ipaemg.service
 chmod 644 /lib/systemd/system/ipaems.service
+chmod 644 /lib/systemd/system/kodi.service
+
 systemctl daemon-reload
 systemctl enable ipaemg.service
 systemctl enable ipaems.service
+systemctl enable kodi.service
+
 systemctl start ipaemg.service
 systemctl start ipaems.service
+systemctl kodi ipaems.service
+
 systemctl status ipaemg.service
 systemctl status ipaems.service
+systemctl status kodi.service
 
 echo "Remember cheatsheet:"
 echo "  Check status: sudo systemctl status ipaem.service"
