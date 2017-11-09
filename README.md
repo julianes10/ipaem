@@ -71,6 +71,7 @@ Lots of possibilities, some extra tuning for raspberry but still feasible.
 * [Shazam like](http://royvanrijn.com/blog/2010/06/creating-shazam-in-java/)
 * [Customize hotword](https://snowboy.kitt.ai)
 * [Python flask REST API tutorial](https://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask)
+* [Audio setup in raspberry](http://www.instructables.com/id/Test-Sound-Card-and-Speakers-in-Raspberry-Pi/)
 
 ## SDR in pi
 One of the target is listen radio on Pi, interfacing of course using voice.
