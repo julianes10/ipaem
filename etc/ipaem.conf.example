@@ -13,7 +13,7 @@
                     "nextLevel": 
                         { 
                           "commonOutput" : {
-                              "cmd": "tuneInWrapper.sh ARG1",
+                              "cmd": "/opt/ipaem/gaIpaDispatcher/tuneInWrapper.sh ARG1",
     			                    "background":true,
                               "feedback": "ack",
                               "next" :"end" },

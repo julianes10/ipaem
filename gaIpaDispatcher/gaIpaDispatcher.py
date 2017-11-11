@@ -119,9 +119,10 @@ def getParam(param,mainLevel,currentLevel):
 def getCmd(mainLevel,currentLevel):
     cmd2return=None
     cmd2return=getParam("cmd",mainLevel,currentLevel)
-    if "arg1" in currentLevel and cmd2return is not None:
-      cmd2return.replace("ARG1",currentLevel["arg1"])
     helper.internalLogger.debug("Cmd to execute '{0}'".format(cmd2return))    
+    if "arg1" in currentLevel and cmd2return is not None:
+      helper.internalLogger.debug("Custom cmd with parameter {0}'".format(currentLevel["arg1"]))      
+      return cmd2return.replace("ARG1",currentLevel["arg1"])
     return cmd2return
 
 
