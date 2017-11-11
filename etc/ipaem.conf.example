@@ -3,6 +3,28 @@
            "logExceptions":"/tmp/ipaeme.log"
   },
   "LocalActions" : {
+      "Radio":  {   "input":"radio",
+                    "output":
+                        {  
+    			                "background":true,
+                          "feedback": "ack-next",
+                          "next" :"chat"
+                        },
+                    "nextLevel": 
+                        { 
+                          "commonOutput" : {
+                              "cmd": "tuneInWrapper.sh ARG1",
+    			                    "background":true,
+                              "feedback": "ack",
+                              "next" :"end" },
+                          "OndaCero":   { "input": "onda cero",   "arg1": "s185285"}, 
+                          "CadenaSer":  { "input": "cadena ser",  "arg1": "s163234"}, 
+                          "COPE":       { "input": "cadena cope",  "arg1": "s24956"},
+                          "esRadio":    { "input": "es radio",     "arg1": "s111410"},
+                          "BBCWSN" :    { "input": "bbc",          "arg1": "s24948"},
+                          "stop" :      { "input": "stop",         "arg1": "STOP"}
+                        }
+                },
       "Test":  {   "input":"test",
                    "output":{  "cmd": "aplay --format=S16_LE --rate=16000 /home/pi/audios/test.raw",
 			       "background":true,
@@ -17,6 +39,14 @@
                                "next" :"end"
                             }
                },
+      "PianoJazz":  {   "input":"piano jazz",
+                   "output":{  "cmd": "youtube-dl -o - https://www.youtube.com/watch?v=82TD06U4ppA | vlc -",
+			       "background":true,
+                               "feedback": "ack",
+                               "next" :"end"
+                            }
+               },
+
       "Lights":  {   "input":"light",
                    "output":{  "cmd": "paplay /usr/share/sounds/freedesktop/stereo/complete.oga",
 			       "background":false,
@@ -24,6 +54,5 @@
                                "next" :"chat"
                             }
                }
-
   }
 }

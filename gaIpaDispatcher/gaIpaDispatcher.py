@@ -85,42 +85,81 @@ class Ga(object):
 '''----------------------------------------------------------'''
 '''----------------    runAction            -----------------'''
 
-def runAction(action):
-    helper.internalLogger.debug("Running '{0}'".format(action))
-    if "background" in action:
-      if action["background"]:
-        subprocess.Popen(['bash','-c',action["cmd"]])
-        return action["next"]
+def runAction(cmd,bg):
+    if cmd is None:
+      helper.internalLogger.debug("No CMD associated to the matched action. Skipped")
+      return None
+    helper.internalLogger.debug("Running CMD '{0}' in background:{1}".format(cmd,bg))
+    if bg:
+        subprocess.Popen(['bash','-c',cmd])
+        return None
     
     #else blocking
-    subprocess.call(['bash','-c',action["cmd"]])
+    subprocess.call(['bash','-c',cmd])
     
+    return None
 
-    return action["next"]
+
+
+'''----------------------------------------------------------'''
+'''----------------    getParam             -----------------'''
+def getParam(param,mainLevel,currentLevel):
+    #helper.internalLogger.debug("Searching param:'{0}' in main '{1}' amd sublevel '{2}'".format(param,mainLevel,currentLevel))    
+    if "output" in currentLevel:
+      if param in currentLevel["output"]:
+        return currentLevel["output"][param]
+
+    if "commonOutput" in mainLevel:
+      if param in mainLevel["commonOutput"]:
+        return mainLevel["commonOutput"][param]
+  
+    return None
+'''----------------------------------------------------------'''
+'''----------------    getCmd               -----------------'''
+def getCmd(mainLevel,currentLevel):
+    cmd2return=None
+    cmd2return=getParam("cmd",mainLevel,currentLevel)
+    if "arg1" in currentLevel and cmd2return is not None:
+      cmd2return.replace("ARG1",currentLevel["arg1"])
+    helper.internalLogger.debug("Cmd to execute '{0}'".format(cmd2return))    
+    return cmd2return
+
 
 '''----------------------------------------------------------'''
 '''----------------    checkAnswer          -----------------'''
 
-def checkAnswer(actions,text):
-    helper.internalLogger.debug("Checking '{0}' on local actions {1}...".format(text,actions))
+def checkAnswer(rootActions,text,level):
+    helper.internalLogger.debug("Checking '{0}' on level {1}...".format(text,level))
     if text is None:
-      return None
+      return None,None
     if text=="":
-      return None
+      return None,None
    
+    actions=rootActions
+    if level is not None:
+       actions=level
+    
     for key,item in actions.items():
       helper.internalLogger.debug("Trying to match {0} on action {1}".format(text,key))
+      if "input" not in item:
+         continue
       if text.lower() in item['input'] or item['input'] in text.lower():
-         helper.internalLogger.debug("Action found over '{0}': {1}".format(text,key))         
-         return runAction(item['output'])
-  
-    helper.internalLogger.debug("No action found over '{0}'".format(text))
-    return None
+         helper.internalLogger.debug("Action found over '{0}': {1}".format(text,key))
+         cmd=getCmd(actions,item)
+         runAction(cmd,getParam("background",actions,item))   
+         rt1=getParam("next",actions,item)
+         rt2=None
+         if "nextLevel" in item:
+            rt1,rt2=checkAnswer(rootActions,text,item["nextLevel"]) 
+         return rt1,rt2
+
+    helper.internalLogger.debug("No match found for '{0}'".format(text))
+    return None,None
 
 '''----------------------------------------------------------'''
 '''----------------    process_event        -----------------'''
 
-def process_event(cfg_Actions,event,ga):
+def process_event(cfg_Actions,event,ga,level):
 
     helper.internalLogger.debug("Processing event:{0}...".format(event))
 
@@ -130,7 +169,7 @@ def process_event(cfg_Actions,event,ga):
         subprocess.call(['aplay','--format=S16_LE','--rate=21000','/home/pi/audios/ack.raw'])       
     elif event.type == EventType.ON_RECOGNIZING_SPEECH_FINISHED:
         helper.internalLogger.debug("Let's process what google say you have said")
-        return checkAnswer(cfg_Actions,event.args['text'])
+        return checkAnswer(cfg_Actions,event.args['text'],level)
     elif event.type == EventType.ON_START_FINISHED:
         ga.setBusy(False)
     elif event.type == EventType.ON_CONVERSATION_TURN_FINISHED:
@@ -146,7 +185,7 @@ def process_event(cfg_Actions,event,ga):
     ''' 
 
 
-    return 0
+    return None,None
 
 '''----------------------------------------------------------'''
 '''----------------       M A I N         -------------------'''
@@ -195,13 +234,15 @@ def main(configfile,cred):
       apiRestTask=threading.Thread(target=apirest_task,args=(assistant,ga,),name="theOtherTrigger")
       apiRestTask.daemon = True
       apiRestTask.start()
+      level=None
       for event in assistant.start():
-            result=process_event(cfg_Actions,event,ga)
-            if result == "end":
-                helper.internalLogger.debug('Stop conversation')
+            nextStep,nextLevel=process_event(cfg_Actions,event,ga,level)
+            level=nextLevel
+            if nextStep == "end":
+                helper.internalLogger.debug('Stop conversation.')
                 assistant.stop_conversation()
-            elif result == "chat":
-                helper.internalLogger.debug('Start conversation')
+            elif nextStep == "chat":
+                helper.internalLogger.debug('Start conversation. Next level {0}'.format(nextLevel))
                 assistant.start_conversation()
             else: # none or other
                 helper.internalLogger.debug('Waiting next event')
