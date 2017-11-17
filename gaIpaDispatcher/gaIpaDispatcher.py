@@ -81,6 +81,20 @@ class Ga(object):
         self.busy = value
     def getBusy(self):
         return self.busy
+
+'''----------------------------------------------------------'''
+'''----------------    playSound            -----------------'''
+
+def playSound(item,bg=False):
+   try:
+      p=subprocess.Popen(['aplay',configuration["audios"][item]])
+      if not bg:
+        p.wait()     
+      helper.internalLogger.debug("OK processing audio file for {0} item".format(item))
+   except Exception as e:
+      helper.internalLogger.warning("Error processing audio file for {0} item".format(item))
+      helper.einternalLogger.exception(e)     
+   return None
    
 '''----------------------------------------------------------'''
 '''----------------    runAction            -----------------'''
@@ -99,6 +113,13 @@ def runAction(cmd,bg):
     
     return None
 
+'''----------------------------------------------------------'''
+'''----------------    muteLocalOutput      -----------------'''
+def muteLocalOutput(mute):
+  label="mute"
+  if not mute:
+    label="unmute"
+  runAction("amixer -c 0 set PCM {0}".format(label),False)
 
 
 '''----------------------------------------------------------'''
@@ -152,6 +173,8 @@ def checkAnswer(rootActions,text,level):
          rt2=None
          if "nextLevel" in item:
             rt1,rt2=checkAnswer(rootActions,text,item["nextLevel"]) 
+         fb=getParam("feedback",actions,item)
+         playSound(fb,True)
          return rt1,rt2
 
     helper.internalLogger.debug("No match found for '{0}'".format(text))
@@ -166,23 +189,32 @@ def process_event(cfg_Actions,event,ga,level):
 
     if event.type == EventType.ON_CONVERSATION_TURN_STARTED:
         ga.setBusy(True)
-        helper.internalLogger.debug("Please say something")
-        subprocess.call(['aplay','--format=S16_LE','--rate=21000','/home/pi/audios/ack.raw'])       
+        helper.internalLogger.debug("Please say something, google is waiting for you")
+        playSound("gawaiting")       
+        muteLocalOutput(True)     #TODO RADIO MUTE TOO¡¡¡  
     elif event.type == EventType.ON_RECOGNIZING_SPEECH_FINISHED:
         helper.internalLogger.debug("Let's process what google say you have said")
         return checkAnswer(cfg_Actions,event.args['text'],level)
-    elif event.type == EventType.ON_START_FINISHED:
-        ga.setBusy(False)
+    elif event.type == EventType.ON_RESPONDING_STARTED:
+        muteLocalOutput(False)     #TODO RADIO NOT YET ¡¡¡ 
+    elif ( event.type == EventType.ON_RESPONDING_FINISHED or
+           event.type == EventType.ON_NO_RESPONSE or
+           event.type == EventType.ON_CONVERSATION_TURN_TIMEOUT
+         ):
+        muteLocalOutput(False)     #TODO RADIO RECOVER¡¡¡ 
     elif event.type == EventType.ON_CONVERSATION_TURN_FINISHED:
-        ga.setBusy(False)
+        ga.setBusy(False)     
+        playSound("gafinished")
     elif event.type == EventType.ON_ASSISTANT_ERROR and event.args and event.args['is_fatal']:
         helper.internalLogger.critical("Error, exiting")
+        playSound("crash") 
         sys.exit(1)
-
 
     '''    if (event.type == EventType.ON_CONVERSATION_TURN_FINISHED and
             event.args and not event.args['with_follow_on_turn']):
         helper.internalLogger.debug("ON_CONVERSATION_TURN_FINISHED with_follow_on_turn")
+ON_END_OF_UTTERANCE = 3
+ON_CONVERSATION_TURN_FINISHED = 9
     ''' 
 
 
@@ -197,6 +229,7 @@ def main(configfile,cred):
 
   global ga
   global assistant
+  global configuration
   ga=Ga()
 
   # Loading config file,
@@ -229,7 +262,8 @@ def main(configfile,cred):
   try:
     with open(cred, 'r') as f:
          credentials = google.oauth2.credentials.Credentials(token=None,
-                                                            **json.load(f))      
+                                                            **json.load(f))  
+    playSound("boot")     
     with Assistant(credentials) as assistant:
       ### Now let's run in background alternative ways to 'ok google' speech
       apiRestTask=threading.Thread(target=apirest_task,args=(assistant,ga,),name="theOtherTrigger")
@@ -245,8 +279,8 @@ def main(configfile,cred):
             elif nextStep == "chat":
                 helper.internalLogger.debug('Start conversation. Next level {0}'.format(nextLevel))
                 assistant.start_conversation()
-            else: # none or other
-                helper.internalLogger.debug('Waiting next event')
+            #else: # none or other
+            #    helper.internalLogger.debug('Waiting next event')
 
 
   except Exception as e:

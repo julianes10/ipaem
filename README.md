@@ -72,6 +72,9 @@ Lots of possibilities, some extra tuning for raspberry but still feasible.
 * [Customize hotword](https://snowboy.kitt.ai)
 * [Python flask REST API tutorial](https://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask)
 * [Audio setup in raspberry](http://www.instructables.com/id/Test-Sound-Card-and-Speakers-in-Raspberry-Pi/)
+* [Free Sounds to custom your project](https://www.soundjay.com/index.html)
+* [Free Sounds to custom your project](https://www.soundjay.com/index.html)
+* [Amixer commands](https://www.soundjay.com/index.html)http://blog.scphillips.com/posts/2013/01/sound-configuration-on-raspberry-pi-with-alsa/)
 
 ## SDR in pi
 One of the target is listen radio on Pi, interfacing of course using voice.

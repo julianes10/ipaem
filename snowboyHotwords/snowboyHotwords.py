@@ -34,7 +34,7 @@ models = sys.argv[1:]
 # capture SIGINT signal, e.g., Ctrl+C
 signal.signal(signal.SIGINT, signal_handler)
 churri_is_said = False
-sensitivity = [0.5]*len(models)
+sensitivity = [0.3]*len(models)
 detector = snowboydecoder.HotwordDetector(models, sensitivity=sensitivity)
 callbacks = [lambda: hotword_handler(),
              lambda: hotword_handler()]

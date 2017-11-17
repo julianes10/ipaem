@@ -2,12 +2,40 @@
   "log": { "logTraces":"/tmp/ipaem.log",
            "logExceptions":"/tmp/ipaeme.log"
   },
+  "audios": {
+              "boot":"/home/pi/audios/ongoing.wav",
+              "ack":"/home/pi/audios/shortBeep.wav",
+              "gawaiting":"/home/pi/audios/ding.wav",
+              "gafinished":"/home/pi/audios/dong.wav",
+              "waitpls":"/home/pi/audios/fax_call.wav",
+              "fail":"/home/pi/audios/errorBeep.wav",
+              "crash":"/home/pi/audios/glass.wav"
+  },
   "LocalActions" : {
+      "Volume":  {  "input":"local volume",
+                    "output":
+                        {  
+                          "next" :"chat"
+                        },
+                    "nextLevel": 
+                        { 
+                          "commonOutput" : {
+                              "cmd": "amixer -c 0 set PCM ARG1",
+    			                    "background":false,
+                              "feedback": "ack",
+                              "next" :"end" },
+                          "up":     { "input": "up",  "arg1": "5dB+"}, 
+                          "down":   { "input": "down",  "arg1": "5dB-"}, 
+                          "top":    { "input": "top",   "arg1": "100%"},
+                          "low":    { "input": "low",   "arg1": "50%"},
+                          "mute":   { "input": "mute",  "arg1": "mute"},
+                          "unmute": { "input": "back",  "arg1": "unmute"}
+                        }
+                },
       "Radio":  {   "input":"radio",
                     "output":
                         {  
     			                "background":true,
-                          "feedback": "ack-next",
                           "next" :"chat"
                         },
                     "nextLevel": 
@@ -15,14 +43,14 @@
                           "commonOutput" : {
                               "cmd": "/opt/ipaem/gaIpaDispatcher/tuneInWrapper.sh ARG1",
     			                    "background":true,
-                              "feedback": "ack",
+                              "feedback": "waitpls",
                               "next" :"end" },
-                          "OndaCero":   { "input": "onda cero",   "arg1": "s185285"}, 
+                          "OndaCero":   { "input": "onda",   "arg1": "s185285"}, 
                           "CadenaSer":  { "input": "cadena ser",  "arg1": "s163234"}, 
-                          "COPE":       { "input": "cadena cope",  "arg1": "s24956"},
-                          "esRadio":    { "input": "es radio",     "arg1": "s111410"},
+                          "COPE":       { "input": "sports",  "arg1": "p1017052"},
+                          "esRadio":    { "input": "is radio",     "arg1": "s111410"},
                           "BBCWSN" :    { "input": "bbc",          "arg1": "s24948"},
-                          "stop" :      { "input": "stop",         "arg1": "STOP"}
+                          "stop" :      { "input": "stop",         "arg1": "STOP", "feedback": "ack"}
                         }
                 },
       "Test":  {   "input":"test",
