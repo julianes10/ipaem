@@ -67,12 +67,14 @@ elif [ "$1" == "remote" ]; then
     echo "TODO"
   elif [ "$2" == "local" ]; then
     echo "Copying local files"
-    scp -r -P $PI_PORT ./../../ipaem $PI_USER@$PI_IPNAME:/home/pi/ipaem.tmp
+    ssh -p $PI_PORT pi@$PI_IPNAME "sudo rm -rf /home/pi/ipaem.tmp; mkdir -p /home/pi/ipaem.tmp"
+    export GLOBIGNORE="./../../ipaem/.git";
+    scp -r -P $PI_PORT ./../../ipaem/* $PI_USER@$PI_IPNAME:/home/pi/ipaem.tmp/
     DEPLOY_CONFIG=""
     if [ "$3" == "config" ]; then
        DEPLOY_CONFIG="sudo cp /opt/ipaem/etc/ipaem.conf.example /etc/ipaem/ipaem.conf;"
     fi
-    ssh -p $PI_PORT pi@$PI_IPNAME "sudo systemctl stop ipaemg ipaems kodi;sudo rm -rf $DEPLOY_FOLDER; sudo mv /home/pi/ipaem.tmp $DEPLOY_FOLDER;$DEPLOY_CONFIG sudo systemctl start ipaemg ipaems kodi;sudo systemctl status ipaemg ipaems kodi"
+    ssh -p $PI_PORT pi@$PI_IPNAME "sudo systemctl stop ipaemg ipaems kodi noip2;sudo rm -rf $DEPLOY_FOLDER; sudo mv /home/pi/ipaem.tmp $DEPLOY_FOLDER;$DEPLOY_CONFIG sudo systemctl start ipaemg ipaems kodi noip2;sudo systemctl status ipaemg ipaems kodi noip2;"
   else
     echo "ERROR: no extra option selected for deployed remotely"
     usage
