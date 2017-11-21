@@ -116,6 +116,7 @@ def runAction(cmd,bg):
 '''----------------------------------------------------------'''
 '''----------------    muteLocalOutput      -----------------'''
 def muteLocalOutput(mute):
+  pass
   label="mute"
   if not mute:
     label="unmute"
@@ -173,6 +174,7 @@ def checkAnswer(rootActions,text,level):
          rt2=None
          if "nextLevel" in item:
             rt1,rt2=checkAnswer(rootActions,text,item["nextLevel"]) 
+         muteLocalOutput(False)     #TODO RADIO RECOVER¡¡¡ 
          fb=getParam("feedback",actions,item)
          playSound(fb,True)
          return rt1,rt2
@@ -204,6 +206,7 @@ def process_event(cfg_Actions,event,ga,level):
         muteLocalOutput(False)     #TODO RADIO RECOVER¡¡¡ 
     elif event.type == EventType.ON_CONVERSATION_TURN_FINISHED:
         ga.setBusy(False)     
+        muteLocalOutput(False)     #TODO RADIO RECOVER¡¡¡ 
         playSound("gafinished")
     elif event.type == EventType.ON_ASSISTANT_ERROR and event.args and event.args['is_fatal']:
         helper.internalLogger.critical("Error, exiting")

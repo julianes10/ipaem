@@ -12,7 +12,7 @@
               "crash":"/home/pi/audios/glass.wav"
   },
   "LocalActions" : {
-      "Volume":  {  "input":"local volume",
+      "Volume":  {  "input":"audio local",
                     "output":
                         {  
                           "next" :"chat"
@@ -50,31 +50,37 @@
                           "COPE":       { "input": "sports",  "arg1": "p1017052"},
                           "esRadio":    { "input": "is radio",     "arg1": "s111410"},
                           "BBCWSN" :    { "input": "bbc",          "arg1": "s24948"},
-                          "stop" :      { "input": "stop",         "arg1": "STOP", "feedback": "ack"}
+                          "stop" :      { "input": "stop",         "arg1": "STOP", 
+                                          "output": {"feedback": "ack"}}
                         }
                 },
-      "Test":  {   "input":"test",
+      "Youtube":  { "input":"music",
+                    "output":
+                        {  
+    			                "background":true,
+                          "next" :"chat"
+                        },
+                    "nextLevel": 
+                        { 
+                          "commonOutput" : {
+                              "cmd": "/opt/ipaem/gaIpaDispatcher/YoutubePluginWrapper.sh ARG1",
+    			                    "background":true,
+                              "feedback": "waitpls",
+                              "next" :"end" },
+                          "baker":   { "input": "baker",   "arg1": "https://www.youtube.com/watch?v=8VJ4A_Cw97Q"}, 
+                          "piano":  { "input": "piano jazz",  "arg1": "https://www.youtube.com/watch?v=82TD06U4ppA"}, 
+                          "chet":    { "input": "chet",  "arg1": "https://www.youtube.com/watch?v=KWzJGRh_Tsw"},
+                          "stop" :   { "input": "stop",         "arg1": "STOP", 
+                                          "output": {"feedback": "ack"}}
+                        }
+                },
+      "Test":  {   "input":"this is a test",
                    "output":{  "cmd": "aplay --format=S16_LE --rate=16000 /home/pi/audios/test.raw",
 			       "background":true,
                                "feedback": "ack",
                                "next" :"end"
                             }
                },
-      "Chet":  {   "input":"chet baker",
-                   "output":{  "cmd": "youtube-dl -o - https://www.youtube.com/watch?v=KWzJGRh_Tsw | vlc -",
-			       "background":true,
-                               "feedback": "ack",
-                               "next" :"end"
-                            }
-               },
-      "PianoJazz":  {   "input":"piano jazz",
-                   "output":{  "cmd": "youtube-dl -o - https://www.youtube.com/watch?v=82TD06U4ppA | vlc -",
-			       "background":true,
-                               "feedback": "ack",
-                               "next" :"end"
-                            }
-               },
-
       "Lights":  {   "input":"light",
                    "output":{  "cmd": "paplay /usr/share/sounds/freedesktop/stereo/complete.oga",
 			       "background":false,
