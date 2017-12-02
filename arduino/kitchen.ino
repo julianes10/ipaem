@@ -1,73 +1,25 @@
-#include "FastLED.h"
 #include <SoftwareSerial.h>
 #include <stdio.h>
-
-// How many leds in your strip?
-#define NUM_LEDS 46
-
-// For led chips like Neopixels, which have a data line, ground, and power, you just
-// need to define DATA_PIN.  For led chipsets that are SPI based (four wires - data, clock,
-// ground, and power), like the LPD8806 define both DATA_PIN and CLOCK_PIN
-#define DATA_PIN 7
+#include "lsem.h"
 
 String inputString = ""; // a string to hold incoming data
 boolean stringComplete = false; // whether the string is complete
 
-
-// Define the array of leds
-CRGB leds[NUM_LEDS];
-
 void setup() { 
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
+
   // Serial to debug AND comunication protocolo with PI              
   Serial.begin(9600);
+  Serial.println("Setup... 'came on, be my baby, came on'");
+  Serial.println("Setup... 'came on, be my baby, came on'");
   Serial.println("Setup... 'came on, be my baby, came on'");
   // reserve 200 bytes for the inputString:
   inputString.reserve(200);
 }
 
-
-void testColorRollingLed(CRGB color)
-{
- for (int turn=0;turn<NUM_LEDS;turn++)
- {
-  // Turn the LED on, then pause
-  for (int i=0;i<NUM_LEDS;i++)
-  {
-    leds[i] = CRGB::Black;
-  }
-  /*Serial.print("Next LED: ");
-  Serial.print(turn);
-  Serial.print(" with color:");
-  Serial.println(color,HEX);*/
-  leds[turn] = color;
-  FastLED.show();
-  delay(10);
- }
-}
-boolean doRolling=false;
-//------------------------------------------------
-void refreshLedStrip()
-{
-  if (doRolling)
-  {
-    testColorRollingLed(CRGB::Red); 
-    testColorRollingLed(CRGB::Green);
-    testColorRollingLed(CRGB::Blue);
-  }
-  doRolling=false;
-}
-
-
 //------------------------------------------------
 void serialEvent() {
   while (Serial.available()) {
-     // get the new byte:
      char inChar = (char)Serial.read();
-     // add it to the inputString:
-
-     // if the incoming character is a newline, set a flag
-     // so the main loop can do something about it:
      if (inChar < 0x20) {
        stringComplete = true;
        break;
@@ -76,29 +28,95 @@ void serialEvent() {
   }
 }
 
-
 //-------------------------------------------------
-void readSerialCommand() {
-  // print the string when a newline arrives:
-  if (stringComplete) {
-    //Process string
-    Serial.print("DEBUG:");
-    Serial.println(inputString);
-    
-    //PROCESS COMMAND
-    if (inputString == "ROLLING")
-    {
-      Serial.println("DO ROLLING");
-      doRolling=true;       
-    }
-    else {
-      Serial.println("NO ROLLING");
-    }
+/*
+EM SERIAL PROTOCOL, INEFFICIENT,UNSECURE, BUT EASY TO READ, QUICK TO IMPLEMENT AND TEST:
+:<TYPE>[<SUBTYPE>|<VALUE><SUBTYPE>|<VALUE>...] ;[more commands....]...\n
+TYPES:
+*/
+  #define TYPE_LED    'L' // (led strip)
+  #define TYPE_STATUS 'S' // (ipaem status)
+// For subtypes of leds see and protocol details go to  lsem.h
 
-    // clear the string:
-    inputString = "";
-    stringComplete = false;
-  }
+void readSerialCommand() {
+  char m=0;
+  uint8_t index=0;
+  uint8_t len=0;
+  uint32_t color=0;
+
+  if (!stringComplete)   {goto exiting;}
+  
+  Serial.print("DEBUG:"); Serial.println(inputString);
+  //TODO treat several commands in one line
+  index=inputString.indexOf(':');
+  len=inputString.length();
+  if (index <0)         {Serial.println("DEBUG: void command");       goto cleanAndExit;}
+  if ((len-index) <=0)  {Serial.println("DEBUG: incomplete command"); goto cleanAndExit;}
+  index++; 
+  switch(inputString.charAt(index)){
+    case TYPE_STATUS:
+      //TODO
+      break;
+    case TYPE_LED:
+      index++;
+      if ((len-index) <=0)  {Serial.println("DEBUG: incomplete led command"); goto cleanAndExit;}
+      switch(inputString.charAt(index)){
+        case LS_RESET:
+          index++;
+          LSEM.reset();
+          break;
+        case LS_COLOR:
+          index++;
+          if ((len-(index+6)) <0) {Serial.println("DEBUG: incomplete ls_color"); goto cleanAndExit;}
+          sscanf(inputString.substring(index,index+6).c_str(),"%X",&color);
+          LSEM.setColor(color);
+          index=+6;
+          break;
+        case LS_TIMEOUT:
+          index++;
+          if ((len-(index+4)) <0) {Serial.println("DEBUG: incomplete ls_timeout"); goto cleanAndExit;}
+          LSEM.setTimeout((uint16_t)inputString.substring(index,index+4).toInt());
+          index=+4;
+          break;
+        case LS_PAUSE:
+          index++;
+          if ((len-(index+4)) <0) {Serial.println("DEBUG: incomplete ls_timeout"); goto cleanAndExit;}
+          LSEM.setPause((uint16_t)inputString.substring(index,index+4).toInt());
+          index=+4;
+          break;
+        case LS_MODE:
+          index++;
+          m=inputString.charAt(index);
+          LSEM.setMode(m);
+          //TODO backup M just in case
+          switch(m){
+              case LS_MODE_RAINBOW:
+              case LS_MODE_COLOR:
+              case LS_MODE_NOISE:
+              case LS_MODE_ROLLING_TEST:
+              case LS_MODE_ROLLING_COLOR:
+                index++;
+                break;
+              case LS_MODE_ONE:
+                index++;
+                if ((len-(index+2)) <0) {Serial.println("DEBUG: incomplete ls_mode_one"); goto cleanAndExit;}
+                LSEM.setLed((uint8_t)inputString.substring(index,index+2).toInt());
+                index=+2;
+                break;
+              default: LSEM.setMode(0); Serial.println("DEBUG: LS unexpected mode"); goto cleanAndExit;
+          }
+          break;
+        default: Serial.println("DEBUG:LS unexpected subtype"); goto cleanAndExit;
+      };
+      break;
+    default: Serial.println("DEBUG: PROTOCOL unexpected type"); goto cleanAndExit;
+  };
+  Serial.println("DEBUG: Command processed successfully");
+
+cleanAndExit:
+  inputString = "";
+  stringComplete = false;
+exiting:;
 }
 
 
@@ -114,7 +132,7 @@ void loop() {
   // ------------- OUTPUT REFRESHING ---------------
 
   // Write led strip
-  refreshLedStrip();
+  LSEM.refresh();
 
   // Write motor 
   //TODO
