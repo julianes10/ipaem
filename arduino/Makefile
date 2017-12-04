@@ -1,6 +1,6 @@
 BOARD_TAG    = uno
 ARDUINO_PORT = /dev/ttyUSB0
-ARDUINO_LIBS = SoftwareSerial FastLED
+ARDUINO_LIBS = SoftwareSerial FastLED SimpleTimer
 
 USER_LIB_PATH = $(realpath ./lib)
 

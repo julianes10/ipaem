@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 #include "FastLED.h"
+#include "SimpleTimer.h"
 
 #define NUM_LEDS 46
 
@@ -32,20 +33,28 @@ class LSEM
 
   void refresh();
 
-  void setMode(char m){_mode=m;};
-  void setColor(CRGB c){_color=c;};
-  void setLed(uint8_t led){_one=led;};
-  void setTimeout(uint16_t t){_dsecTimeout=t;};
-  void setPause(uint16_t p){_msPause=p;};
+  void setMode(char m);
+  void setColor(uint32_t c);
+  void setLed(uint8_t led);
+  void setTimeout(uint16_t t);
+  void setPause(uint16_t p);
   void reset();
+
+  bool _rollingUnpaused;
+
 
  private:
   CRGB _leds[NUM_LEDS];
   char _mode;
   uint8_t _one;
-  uint16_t _dsecTimeout; //T
-  uint16_t _msPause; //P
+  int  _timerTimeout; //T
+  int  _timerPause; //P
   CRGB _color; //C
+  SimpleTimer _timers;
+  uint8_t _rollingTurn;
+  CRGB _rollingTestColor;
+
+
 
   void _doRollingTest();
   void _doRollingColor(CRGB color);
@@ -54,7 +63,8 @@ class LSEM
   void _doRainbow();
   void _doNoise();
   void _setAllLeds(CRGB color);
-};
+
+ };
 
 extern class LSEM LSEM;
 #endif

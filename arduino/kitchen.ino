@@ -43,6 +43,7 @@ void readSerialCommand() {
   uint8_t index=0;
   uint8_t len=0;
   uint32_t color=0;
+  long br=0,bg=0,bb=0;
 
   if (!stringComplete)   {goto exiting;}
   
@@ -68,7 +69,12 @@ void readSerialCommand() {
         case LS_COLOR:
           index++;
           if ((len-(index+6)) <0) {Serial.println("DEBUG: incomplete ls_color"); goto cleanAndExit;}
-          sscanf(inputString.substring(index,index+6).c_str(),"%X",&color);
+          Serial.print("DEBUG: new LS color:");Serial.print(inputString.substring(index,index+6).c_str());
+          sscanf(inputString.substring(index,index+2).c_str(),  "%X",&br); Serial.print(br,HEX);
+          sscanf(inputString.substring(index+2,index+4).c_str(),"%X",&bg); Serial.print(bg,HEX);
+          sscanf(inputString.substring(index+4,index+6).c_str(),"%X",&bb); Serial.println(bb,HEX);
+          Serial.print("DEBUG:");Serial.print(br,HEX);Serial.print(bg,HEX);Serial.print(bb,HEX);
+          color=(br<<16)|(bg<<8)|bb;
           LSEM.setColor(color);
           index=+6;
           break;
