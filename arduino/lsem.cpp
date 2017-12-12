@@ -8,11 +8,30 @@ class LSEM LSEM;
 
 
 #define DATA_PIN 7
+
+//------------------------------------------------
+//-------    TIMER CALLBACKS     -----------------
+//------------------------------------------------
+void _callbackTimeout(void)
+{
+  Serial.println(F("DEBUG: callbackTimeout"));
+
+  LSEM.reset();
+}
+//------------------------------------------------
+void _callbackPause(void)
+{
+  //Serial.println(F("DEBUG: callbackPause");
+  LSEM._rollingUnpaused=true;
+}
+
+//------------------------------------------------
+//------------------------------------------------
 //------------------------------------------------
 LSEM::LSEM()
 {
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(_leds, NUM_LEDS);
-  reset();
+  fullReset();
 }
 //------------------------------------------------
 void LSEM::refresh(void)
@@ -29,11 +48,11 @@ void LSEM::refresh(void)
   }
   FastLED.show();
 }
-//------------------------------------------------
-//------------------------------------------------
+
 //------------------------------------------------
 void LSEM::reset(void)
 {
+   Serial.print(F("DEBUG:LSEM::reset"));
   _mode=0;
   _one=0;
   _color=CRGB::Black; //C
@@ -46,22 +65,43 @@ void LSEM::reset(void)
   _timers.deleteTimer(_timerPause);
   _timerPause=-1;
 }
-
 //------------------------------------------------
-void _callbackTimeout(void)
+void LSEM::fullReset(void)
 {
-  Serial.println("DEBUG: callbackTimeout");
-
-  LSEM.reset();
+  //Serial.print(F("DEBUG:LSEM::fullReset"));
+  reset();
+  resetQueue();
 }
 //------------------------------------------------
-void _callbackPause(void)
+void LSEM::resetQueue(void)
 {
-  //Serial.println("DEBUG: callbackPause");
-  LSEM._rollingUnpaused=true;
+  //Serial.print(F("DEBUG:LSEM::resetQueue"));
+  _queue.reset();
 }
 
+//------------------------------------------------
+void LSEM::enqueueCommands(char *cmds)
+{
+  _queue.push(cmds);
+  Serial.print(F("DEBUG: enqueueCommands: "));
+  Serial.println(cmds);
+  debugInfo();
+}
 
+//------------------------------------------------
+char *LSEM::dequeueCommands(char *cmds)
+{
+  char *rt=_queue.pop(cmds);
+  Serial.print(F("DEBUG: dequeueCommands: "));
+  Serial.println(rt);
+  debugInfo();
+  return rt;
+}
+//------------------------------------------------
+bool LSEM::areThereEnqueuedCommands()
+{
+  return (_queue.count()>0);
+}
 //------------------------------------------------
 void LSEM::setTimeout(uint16_t t)
 {
@@ -70,9 +110,9 @@ void LSEM::setTimeout(uint16_t t)
   _timerTimeout=-1;
   if (t>0){
     _timerTimeout=_timers.setTimeout((long int)t*100,_callbackTimeout);
-    Serial.print("DEBUG: setTimeout to ");
+    Serial.print(F("DEBUG: setTimeout to "));
     Serial.print(t*100);
-    Serial.print(" ms. Timer number: ");
+    Serial.print(F(" ms. Timer number: "));
     Serial.println(_timerTimeout);
   }
 }
@@ -83,27 +123,27 @@ void LSEM::setPause(uint16_t t)
   _timerPause=-1;
   if (t>0){
     _timerPause=_timers.setInterval((long int)t,_callbackPause);
-    Serial.print("DEBUG: setPause to ");
+    Serial.print(F("DEBUG: setPause to "));
     Serial.print(t);
-    Serial.print(" ms. Timer number: ");
+    Serial.print(F(" ms. Timer number: "));
     Serial.println(_timerPause);
   }
 }
 //------------------------------------------------
 void LSEM::setMode(char m)
 {
-  Serial.print("DEBUG: setMode from: ");
+  Serial.print(F("DEBUG: setMode from: "));
   Serial.print(_mode);
-  Serial.print(" to: ");
+  Serial.print(F(" to: "));
   Serial.println(m);
   _mode=m;
 }
 //------------------------------------------------
 void LSEM::setColor(uint32_t c)
 { 
-  Serial.print("DEBUG: setColor from: ");
+  Serial.print(F("DEBUG: setColor from: "));
   Serial.print(_color,HEX);
-  Serial.print(" to: ");
+  Serial.print(F(" to: "));
   Serial.println(c,HEX);
   _color=(CRGB)c;
 }
@@ -111,6 +151,23 @@ void LSEM::setColor(uint32_t c)
 void LSEM::setLed(uint8_t led)
 {
   _one=led;
+}
+
+
+//------------------------------------------------
+void LSEM::debugInfo()
+{
+  char aux[100];
+  sprintf(aux,"DEBUG: LD: Current mode 0x%X. Timeout:TODO. Pause:TODO. Q: Commands queued:%i.Head %i, Tail %i", _mode,_queue.count(),_queue.getHead(),_queue.getTail());
+  Serial.println(aux);
+  for (int i=0;i<MAX_STRINGS_IN_QUEUE;i++){
+    if (( _queue.peek(i,aux)) && (aux[0]!=0)){
+      Serial.print(F("  DEBUG Item["));
+      Serial.print(i);
+      Serial.print(F("]:")); 
+      Serial.println(aux);
+    }
+  }
 }
 //------------------------------------------------
 void LSEM::_doOne()

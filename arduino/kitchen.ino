@@ -1,19 +1,32 @@
 #include <SoftwareSerial.h>
 #include <stdio.h>
 #include "lsem.h"
+#include "pirem.h"
 
-String inputString = ""; // a string to hold incoming data
-boolean stringComplete = false; // whether the string is complete
 
+//------------------------------------------------
+//--- GLOBAL VARIABLES ---------------------------
+//------------------------------------------------
+char    serialInputString[50]; // a string to hold incoming data
+int     serialIx=0;
+boolean serialInputStringReady = false; // whether the string is complete
+const char inputBootString[] PROGMEM ={":LP0050:LT0070:LMT"}; // a string to welcome
+boolean inputBootStringDone = false; // whether the string is complete
+
+
+const char inputPIRLOW2HIGHstring[] PROGMEM = {":LCAA,BB,CC:LMA"};
+const char inputPIRHIGH2LOWstring[] PROGMEM = {":LX"};
+
+//------------------------------------------------
+//--- GLOBAL FUNCTIONS ---------------------------
+//------------------------------------------------
 void setup() { 
 
   // Serial to debug AND comunication protocolo with PI              
   Serial.begin(9600);
-  Serial.println("Setup... 'came on, be my baby, came on'");
-  Serial.println("Setup... 'came on, be my baby, came on'");
-  Serial.println("Setup... 'came on, be my baby, came on'");
-  // reserve 200 bytes for the inputString:
-  inputString.reserve(200);
+  Serial.println(F("Setup... 'came on, be my baby, came on'"));
+  serialInputString[0]=0;
+  
 }
 
 //------------------------------------------------
@@ -21,14 +34,16 @@ void serialEvent() {
   while (Serial.available()) {
      char inChar = (char)Serial.read();
      if (inChar < 0x20) {
-       stringComplete = true;
+       serialInputStringReady = true;
+       serialIx=0;
        break;
      }
-     inputString += inChar;
+     serialInputString[serialIx++]=inChar;
   }
 }
 
 //-------------------------------------------------
+
 /*
 EM SERIAL PROTOCOL, INEFFICIENT,UNSECURE, BUT EASY TO READ, QUICK TO IMPLEMENT AND TEST:
 :<TYPE>[<SUBTYPE>|<VALUE><SUBTYPE>|<VALUE>...] ;[more commands....]...\n
@@ -38,63 +53,65 @@ TYPES:
   #define TYPE_STATUS 'S' // (ipaem status)
 // For subtypes of leds see and protocol details go to  lsem.h
 
-void readSerialCommand() {
-  char m=0;
+uint8_t readSerialCommand(char *cmd) {
+  char m=0,bk=0;
   uint8_t index=0;
   uint8_t len=0;
   uint32_t color=0;
-  long br=0,bg=0,bb=0;
+  int br=0,bg=0,bb=0;
+  char aux[50];
+  char **kk;
 
-  if (!stringComplete)   {goto exiting;}
-  
-  Serial.print("DEBUG:"); Serial.println(inputString);
-  //TODO treat several commands in one line
-  index=inputString.indexOf(':');
-  len=inputString.length();
-  if (index <0)         {Serial.println("DEBUG: void command");       goto cleanAndExit;}
-  if ((len-index) <=0)  {Serial.println("DEBUG: incomplete command"); goto cleanAndExit;}
-  index++; 
-  switch(inputString.charAt(index)){
+  len=strlen(cmd);
+  Serial.print(F("DEBUG: Parsing:")); Serial.println(cmd);  
+  switch(cmd[index]){
     case TYPE_STATUS:
       //TODO
       break;
     case TYPE_LED:
       index++;
-      if ((len-index) <=0)  {Serial.println("DEBUG: incomplete led command"); goto cleanAndExit;}
-      switch(inputString.charAt(index)){
+      if ((len-index) <=0)  {Serial.println(F("DEBUG: incomplete led command")); goto exitingCmd;}
+      switch(cmd[index]){
         case LS_RESET:
           index++;
           LSEM.reset();
           break;
         case LS_COLOR:
           index++;
-          if ((len-(index+6)) <0) {Serial.println("DEBUG: incomplete ls_color"); goto cleanAndExit;}
-          Serial.print("DEBUG: new LS color:");Serial.print(inputString.substring(index,index+6).c_str());
-          sscanf(inputString.substring(index,index+2).c_str(),  "%X",&br); Serial.print(br,HEX);
-          sscanf(inputString.substring(index+2,index+4).c_str(),"%X",&bg); Serial.print(bg,HEX);
-          sscanf(inputString.substring(index+4,index+6).c_str(),"%X",&bb); Serial.println(bb,HEX);
-          Serial.print("DEBUG:");Serial.print(br,HEX);Serial.print(bg,HEX);Serial.print(bb,HEX);
-          color=(br<<16)|(bg<<8)|bb;
+          if ((len-(index+8)) <0) {Serial.println(F("DEBUG: incomplete ls_color")); goto exitingCmd;}
+          Serial.print(F("DEBUG: new LS color:"));
+          sscanf(&cmd[index],"%X",&br); index+=3;
+          sscanf(&cmd[index],"%X",&bg); index+=3;
+          sscanf(&cmd[index],"%X",&bb); index+=2;
+          //Serial.print(F("DEBUG:");Serial.print(br,HEX);Serial.print(bg,HEX);Serial.print(bb,HEX);
+          color=(uint32_t) ( 
+                            (((long int)(br))<<16 ) | 
+                            (((long int)(bg))<<8)   | 
+                            ((long int)(bb))  );
           LSEM.setColor(color);
-          index=+6;
           break;
         case LS_TIMEOUT:
           index++;
-          if ((len-(index+4)) <0) {Serial.println("DEBUG: incomplete ls_timeout"); goto cleanAndExit;}
-          LSEM.setTimeout((uint16_t)inputString.substring(index,index+4).toInt());
-          index=+4;
+          if ((len-(index+4)) <0) {Serial.println(F("DEBUG: incomplete ls_timeout")); goto exitingCmd;}
+          LSEM.setTimeout((uint16_t)strtol(&cmd[index],kk,10));
+          index+=4;
           break;
         case LS_PAUSE:
           index++;
-          if ((len-(index+4)) <0) {Serial.println("DEBUG: incomplete ls_timeout"); goto cleanAndExit;}
-          LSEM.setPause((uint16_t)inputString.substring(index,index+4).toInt());
-          index=+4;
+          if ((len-(index+4)) <0) {Serial.println(F("DEBUG: incomplete ls_timeout")); goto exitingCmd;}
+          LSEM.setPause((uint16_t)strtol(&cmd[index],kk,10));
+          index+=4;
+          break;
+        case LS_ENQUEUE:
+          index++;
+          LSEM.enqueueCommands(&cmd[index]);
+          index+=len;
           break;
         case LS_MODE:
           index++;
-          m=inputString.charAt(index);
+          m=cmd[index];
+          bk=LSEM.getMode();
           LSEM.setMode(m);
-          //TODO backup M just in case
           switch(m){
               case LS_MODE_RAINBOW:
               case LS_MODE_COLOR:
@@ -105,34 +122,85 @@ void readSerialCommand() {
                 break;
               case LS_MODE_ONE:
                 index++;
-                if ((len-(index+2)) <0) {Serial.println("DEBUG: incomplete ls_mode_one"); goto cleanAndExit;}
-                LSEM.setLed((uint8_t)inputString.substring(index,index+2).toInt());
-                index=+2;
+                if ((len-(index+2)) <0) {Serial.println(F("DEBUG: incomplete ls_mode_one")); goto exitingCmd;}
+                strncpy(aux,&cmd[index],2); index+=2;
+                LSEM.setLed((uint8_t)strtol(aux,kk,10));
+                index+=2;
                 break;
-              default: LSEM.setMode(0); Serial.println("DEBUG: LS unexpected mode"); goto cleanAndExit;
+              default: LSEM.setMode(bk); Serial.println(F("DEBUG: LS unexpected mode, ignoring it")); goto exitingCmd;
           }
           break;
-        default: Serial.println("DEBUG:LS unexpected subtype"); goto cleanAndExit;
+        default: Serial.println(F("DEBUG:LS unexpected subtype")); goto exitingCmd;
       };
       break;
-    default: Serial.println("DEBUG: PROTOCOL unexpected type"); goto cleanAndExit;
+    default: Serial.println(F("DEBUG: PROTOCOL unexpected type")); goto exitingCmd;
   };
-  Serial.println("DEBUG: Command processed successfully");
+  Serial.println(F("DEBUG: Command processed successfully"));
 
-cleanAndExit:
-  inputString = "";
-  stringComplete = false;
-exiting:;
+exitingCmd:;
+return index;
 }
 
+//-------------------------------------------------
+void readSerialCommands(int pirInfo) {
+  int index=0,readbytes=0;
+  int len=0;
+  char inputString[50];
 
+  if (!inputBootStringDone){
+    //inputString=(char*)inputBootString;//
+    Serial.println(F("DEBUG: inputBootString..."));
+    strcpy_P(inputString,(char*)inputBootString);
+    inputBootStringDone=true;
+  }
+  else if (serialInputStringReady){
+    //inputString=(char*)serialInputString;//
+    strcpy(inputString,serialInputString);
+  }
+  else if ( (LSEM.getMode()==0) && (LSEM.areThereEnqueuedCommands())) {
+    LSEM.dequeueCommands(inputString);
+  }
+  else if ( (LSEM.getMode()==0) && (pirInfo==PIR_INFO_LOW2HIGH) ) {
+    Serial.println(F("DEBUG: inputPIRLOW2HIGHstring..."));
+    strcpy_P(inputString,(char*)inputPIRLOW2HIGHstring);
+  }
+  else if ( (pirInfo==PIR_INFO_HIGH2LOW) ) {
+    Serial.println(F("DEBUG: inputPIRHIGH2LOWstring..."));
+    strcpy_P(inputString,(char*)inputPIRHIGH2LOWstring);
+  }
+  else return;
+
+  
+  //Serial.print(F("DEBUG:")); Serial.println(inputString);
+
+  len=strlen(inputString);
+  while ((len-index) >0)
+  { 
+    char *subcmd=0; 
+    subcmd=strchr(inputString,':');
+    if (subcmd==0) {
+      Serial.println(F("DEBUG: no more comands in the line"));
+      break;
+    }
+    index++; 
+    readbytes=readSerialCommand(&inputString[index]);
+    index+=readbytes;  
+  }
+
+
+  if (serialInputStringReady){
+    serialInputString[0]=0;
+    serialInputStringReady = false;
+  }
+
+}
+//-------------------------------------------------
 void loop() { 
 
   //------------- INPUT REFRESHING ----------------
-  // Receive command 
-  readSerialCommand(); 
-  // Read PIR
-  //TODO
+  // Receive command && read PIR
+  readSerialCommands(PIREM.refresh()); 
+ 
   // Read light sensor
   //TODO
   // ------------- OUTPUT REFRESHING ---------------

@@ -4,8 +4,11 @@
 #include "Arduino.h"
 #include "FastLED.h"
 #include "SimpleTimer.h"
+#include "stringQueue.h"
+
 
 #define NUM_LEDS 46
+#define NUM_MAX_QUEUE 5
 
 //-------------
 //SUBTYPES led strip PROTOCOL
@@ -24,6 +27,8 @@
                                        //  e.g 00 or 40. With general settings: C,T,P.
     #define LS_MODE_RAINBOW       'W'  //rainbow. With general settings: T.
     #define LS_MODE_NOISE         'N'  //rainbow. With general settings: T,P
+  #define LS_ENQUEUE 'Q'  // Enqueue the rest of the line commands to play when timeout current mode.
+
 
 class LSEM
 {
@@ -34,17 +39,26 @@ class LSEM
   void refresh();
 
   void setMode(char m);
+  char getMode(){return _mode;}
   void setColor(uint32_t c);
   void setLed(uint8_t led);
   void setTimeout(uint16_t t);
   void setPause(uint16_t p);
   void reset();
+  void resetQueue();
+  void fullReset();
+  void enqueueCommands(char *cmds);
+  char *dequeueCommands(char *cmds);
+  bool areThereEnqueuedCommands();
 
   bool _rollingUnpaused;
+
+  void debugInfo();
 
 
  private:
   CRGB _leds[NUM_LEDS];
+  stringQueue _queue;
   char _mode;
   uint8_t _one;
   int  _timerTimeout; //T
@@ -64,7 +78,7 @@ class LSEM
   void _doNoise();
   void _setAllLeds(CRGB color);
 
- };
+};
 
 extern class LSEM LSEM;
 #endif
