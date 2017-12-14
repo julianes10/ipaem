@@ -10,7 +10,7 @@ class stringQueue stringQueue;
 //------------------------------------------------
 stringQueue::stringQueue()
 {
-  reset();
+  _reset();
 }
 //------------------------------------------------
 int stringQueue::count(void)
@@ -30,7 +30,7 @@ int stringQueue::push(char* in)
  if (_tail == -1) {_tail=0; _head=0;}
  else _tail=(_tail+1 % MAX_STRINGS_IN_QUEUE);
 
- strncpy(_q[_tail],in,MAX_CHARS_IN_STRING);
+ _q[_tail]=strdup(in);
  return _tail;
 }
 
@@ -38,11 +38,17 @@ int stringQueue::push(char* in)
 char *stringQueue::pop(char* out)
 {
  if (0==peek(out)) return 0;
-
- _q[_head][0]=0;
+ pop();
+ return out;
+}
+//------------------------------------------------
+void stringQueue::pop(void)
+{
+ char *ref=peek();
+ if (0==ref) return;
+ free(ref);_q[_head]=0;
  if (count()==1) {_head=-1; _tail=-1;}
  _head=(_head+1 % MAX_STRINGS_IN_QUEUE);
- return out;
 }
 //------------------------------------------------
 char *stringQueue::peek(char* out)
@@ -50,28 +56,35 @@ char *stringQueue::peek(char* out)
  if (out==0)       return 0;
  if (count()==0)   {out[0]=0; return 0;}
 
- strncpy(out,_q[_head],MAX_CHARS_IN_STRING); 
+ strcpy(out,_q[_head]); 
  return out;
 }
 //------------------------------------------------
-char *stringQueue::peek(int pos, char* out)
+char *stringQueue::peek(int pos)
 {
- if (out==0)       return 0;
- if ((count()==0) || (pos<0) || (pos>= MAX_CHARS_IN_STRING) ){
-   out[0]=0; return 0;
+ if ((count()==0) || (pos<0) || (pos>= MAX_STRINGS_IN_QUEUE) ){
+   return 0;
  }
- if (_q[pos] ==0) {
-   out[0]=0; return 0;
- }
-
- strncpy(out,_q[pos],MAX_CHARS_IN_STRING); 
- return out;
+ return _q[pos];
+}
+//------------------------------------------------
+char *stringQueue::peek()
+{
+ return peek(_head);
+}
+//------------------------------------------------
+void stringQueue::clearQueue(void)
+{
+  for (int i=0;i<MAX_STRINGS_IN_QUEUE;i++)  {
+    if (0!=_q[i]) free(_q[i]);
+  }
+  _reset();
 }
 //------------------------------------------------
 //------------------------------------------------
-void stringQueue::reset(void)
+void stringQueue::_reset(void)
 {
-  for (int i=0;i<MAX_STRINGS_IN_QUEUE;i++)  _q[i][0]=0;
+  for (int i=0;i<MAX_STRINGS_IN_QUEUE;i++)  _q[i]=0;
   _head=-1;
   _tail=-1;
 }

@@ -5,23 +5,24 @@
 
 
 #define MAX_STRINGS_IN_QUEUE   7
-#define MAX_CHARS_IN_STRING    50
 
 class stringQueue
 {
  public:
   stringQueue();
   int push(char* in);
-  char *pop(char* out);
-  char *peek(int pos,char* out);
-  char *peek(char* out);
+  char *pop(char* out);   //return a copy in out and free mem
+  char *peek(char* out);  //return a copy in out, not free
+  char *peek(int pos);    //return the reference at pos, not free
+  char *peek();           //return the reference at head, not free
+  void pop();             //just free head mem
   int getHead(){return _head;}
   int getTail(){return _tail;}
   int count();
-  void reset();
-
+  void clearQueue();
  private:
-  char _q[MAX_STRINGS_IN_QUEUE][MAX_CHARS_IN_STRING];
+  void _reset();
+  char *_q[MAX_STRINGS_IN_QUEUE];
   int _head;
   int _tail;
 };
