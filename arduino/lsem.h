@@ -27,6 +27,8 @@ TYPES:
                           //    e.g 0300, 30 seconds. Default 0 NO timeout
   #define LS_PAUSE   'P'  // (pause)   with VALUE:MS in 4 ascii in decs of seconds filled with zeors 
                           //    e.g 4000, 4  seconds. Default 0 no pause
+  #define LS_DEBUG_ON  'O' // Enable debug
+  #define LS_DEBUG_OFF 'o' // Disable debug
   #define LS_MODE    'M'  // (mode) with <SUBTYPE>
     #define LS_MODE_COLOR          'A'  // (all) setup all leds with general settings: C,T,P.
     #define LS_MODE_ROLLING_TEST   'T'  // rolling 3 test colors. With general settings: T,P.
@@ -57,6 +59,9 @@ class LSEM
 
   bool _rollingUnpaused;  //public only for timer callback...
 
+  bool getDebug()       {return _debug;}
+  void setDebug(bool b);
+
  private:
   CRGB _leds[NUM_LEDS];
   stringQueue _queue;
@@ -69,6 +74,7 @@ class LSEM
   int _rollingTurn;
   CRGB _rollingTestColor;
   int _direction;
+  bool _debug;
 
 
 
@@ -90,6 +96,7 @@ class LSEM
   void _doRainbow();
   void _doNoise();
   void _setAllLeds(CRGB color);
+
 
 };
 

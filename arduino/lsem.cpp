@@ -17,7 +17,7 @@ class LSEM LSEM;
 //------------------------------------------------
 void _callbackTimeout(void)
 {
-  Serial.println(F("DEBUG: callbackTimeout"));
+  if (_debug) {Serial.println(F("DEBUG: callbackTimeout"));}
 
   LSEM.reset();
 }
@@ -42,7 +42,7 @@ void LSEM::refresh(void)
   _timers.run();
 
   if ( (_mode==0) && (_queue.count()>0) ){
-    _debugInfo();
+    if (_debug){_debugInfo();}
     processCommands(_queue.peek());
     _queue.pop();
   }
@@ -76,7 +76,7 @@ void LSEM::processCommands(char *inputString)
     char *subcmd=0; 
     subcmd=strchr(inputString,':');
     if (subcmd==0) {
-      Serial.println(F("DEBUG: no more comands in the line"));
+      if (_debug){ Serial.println(F("DEBUG: no more comands in the line"));}
       break;
     }
     index++; 
@@ -89,7 +89,7 @@ void LSEM::processCommands(char *inputString)
 //------------------------------------------------
 void LSEM::reset(void)
 {
-   Serial.print(F("DEBUG:LSEM::reset"));
+   if (_debug) {Serial.print(F("DEBUG:LSEM::reset"));}
   _mode=0;
   _one=0;
   _color=CRGB::Black; 
@@ -102,7 +102,17 @@ void LSEM::reset(void)
   _timers.deleteTimer(_timerPause);
   _timerPause=-1;
   _direction=RIGHT;
+  _debug=false;
 }
+
+//------------------------------------------------
+void LSEM::setDebug(bool b)
+{
+  _debug=b;
+  if (b) Serial.print(F("DEBUG: Debug is enable"));
+  else   Serial.print(F("DEBUG: Debug is disable"));
+}
+
 
 //-------------------------------------------------
 //-------------------------------------------------
@@ -118,14 +128,14 @@ uint8_t LSEM::_readSerialCommand(char *cmd) {
   char **kk=0;
 
   len=strlen(cmd);
-  Serial.print(F("DEBUG: Parsing:")); Serial.println(cmd);  
+  if (_debug){Serial.print(F("DEBUG: Parsing:")); Serial.println(cmd);  }
   switch(cmd[index]){
     case TYPE_STATUS:
       //TODO
       break;
     case TYPE_LED:
       index++;
-      if ((len-index) <=0)  {Serial.println(F("DEBUG: incomplete led command")); goto exitingCmd;}
+      if ((len-index) <=0)  {if (_debug){Serial.println(F("DEBUG: incomplete led command"));} goto exitingCmd;}
       switch(cmd[index]){
         case LS_RESET:
           index++;
@@ -133,8 +143,8 @@ uint8_t LSEM::_readSerialCommand(char *cmd) {
           break;
         case LS_COLOR:
           index++;
-          if ((len-(index+8)) <0) {Serial.println(F("DEBUG: incomplete ls_color")); goto exitingCmd;}
-          Serial.print(F("DEBUG: new LS color:"));
+          if ((len-(index+8)) <0) {if (_debug){Serial.println(F("DEBUG: incomplete ls_color"));} goto exitingCmd;}
+          if (_debug){Serial.print(F("DEBUG: new LS color:"));}
           sscanf(&cmd[index],"%X",&br); index+=3;
           sscanf(&cmd[index],"%X",&bg); index+=3;
           sscanf(&cmd[index],"%X",&bb); index+=2;
@@ -147,21 +157,26 @@ uint8_t LSEM::_readSerialCommand(char *cmd) {
           break;
         case LS_TIMEOUT:
           index++;
-          if ((len-(index+4)) <0) {Serial.println(F("DEBUG: incomplete ls_timeout")); goto exitingCmd;}
+          if ((len-(index+4)) <0) {if (_debug){Serial.println(F("DEBUG: incomplete ls_timeout"));} goto exitingCmd;}
           _setTimeout((uint16_t)strtol(&cmd[index],kk,10));
           index+=4;
           break;
         case LS_PAUSE:
           index++;
-          if ((len-(index+4)) <0) {Serial.println(F("DEBUG: incomplete ls_timeout")); goto exitingCmd;}
+          if ((len-(index+4)) <0) {if (_debug){Serial.println(F("DEBUG: incomplete ls_timeout"));} goto exitingCmd;}
           _setPause((uint16_t)strtol(&cmd[index],kk,10));
           index+=4;
           break;
         case LS_ENQUEUE:
           index++;
           _queue.push(&cmd[index]);
-          _debugInfo();
+          if (_debug){_debugInfo();}
           index+=len;
+          break;
+        case LS_DEBUG_ON:
+          setDebug(true); index++;
+        case LS_DEBUG_OFF:
+          setDebug(false); index++;
           break;
         case LS_MODE:
           index++;
@@ -182,23 +197,25 @@ uint8_t LSEM::_readSerialCommand(char *cmd) {
                 break;
               case LS_MODE_ONE:
                 index++;
-                if ((len-(index+2)) <0) {Serial.println(F("DEBUG: incomplete ls_mode_one")); goto exitingCmd;}
+                if ((len-(index+2)) <0) {if (_debug){Serial.println(F("DEBUG: incomplete ls_mode_one"));} goto exitingCmd;}
                 _setLed((uint8_t)strtol(&cmd[index],kk,10));
                 index+=2;
                 break;
-              default: _setMode(bk); Serial.println(F("DEBUG: LS unexpected mode, ignoring it")); goto exitingCmd;
+              default: _setMode(bk); if (_debug){Serial.println(F("DEBUG: LS unexpected mode, ignoring it"));} goto exitingCmd;
           }
           break;
-        default: Serial.println(F("DEBUG:LS unexpected subtype")); goto exitingCmd;
+        default: if (_debug){Serial.println(F("DEBUG:LS unexpected subtype"));} goto exitingCmd;
       };
       break;
-    default: Serial.println(F("DEBUG: PROTOCOL unexpected type")); goto exitingCmd;
+    default: if (_debug){Serial.println(F("DEBUG: PROTOCOL unexpected type"));} goto exitingCmd;
   };
-  Serial.println(F("DEBUG: Command processed successfully"));
+  if (_debug){Serial.println(F("DEBUG: Command processed successfully"));}
 
 exitingCmd:;
 return index;
 }
+
+
 
 //------------------------------------------------
 void LSEM::_fullReset(void)
@@ -222,10 +239,12 @@ void LSEM::_setTimeout(uint16_t t)
   _timerTimeout=-1;
   if (t>0){
     _timerTimeout=_timers.setTimeout((long int)t*100,_callbackTimeout);
-    Serial.print(F("DEBUG: setTimeout to "));
-    Serial.print(t*100);
-    Serial.print(F(" ms. Timer number: "));
-    Serial.println(_timerTimeout);
+    if (_debug){
+      Serial.print(F("DEBUG: setTimeout to "));
+      Serial.print(t*100);
+      Serial.print(F(" ms. Timer number: "));
+      Serial.println(_timerTimeout);
+    }
   }
 }
 //------------------------------------------------
@@ -235,28 +254,34 @@ void LSEM::_setPause(uint16_t t)
   _timerPause=-1;
   if (t>0){
     _timerPause=_timers.setInterval((long int)t,_callbackPause);
-    Serial.print(F("DEBUG: setPause to "));
-    Serial.print(t);
-    Serial.print(F(" ms. Timer number: "));
-    Serial.println(_timerPause);
+    if (_debug){ 
+      Serial.print(F("DEBUG: setPause to "));
+      Serial.print(t);
+      Serial.print(F(" ms. Timer number: "));
+      Serial.println(_timerPause);
+    }
   }
 }
 //------------------------------------------------
 void LSEM::_setMode(char m)
 {
-  Serial.print(F("DEBUG: setMode from: "));
-  Serial.print(_mode);
-  Serial.print(F(" to: "));
-  Serial.println(m);
+  if (_debug){
+    Serial.print(F("DEBUG: setMode from: "));
+    Serial.print(_mode);
+    Serial.print(F(" to: "));
+    Serial.println(m);
+  }
   _mode=m;
 }
 //------------------------------------------------
 void LSEM::_setColor(uint32_t c)
 { 
-  Serial.print(F("DEBUG: setColor from: "));
-  Serial.print(_color,HEX);
-  Serial.print(F(" to: "));
-  Serial.println(c,HEX);
+  if (_debug){
+    Serial.print(F("DEBUG: setColor from: "));
+    Serial.print(_color,HEX);
+    Serial.print(F(" to: "));
+    Serial.println(c,HEX);
+  }
   _color=(CRGB)c;
 }
 //------------------------------------------------
