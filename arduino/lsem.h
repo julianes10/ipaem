@@ -17,7 +17,6 @@ EM SERIAL PROTOCOL, INEFFICIENT,UNSECURE, BUT EASY TO READ, QUICK TO IMPLEMENT A
 TYPES:
 */
   #define TYPE_LED    'L' // (led strip)
-  #define TYPE_STATUS 'S' // (ipaem status)
 // For subtypes of leds see and protocol details go to  _h
 //SUBTYPES led strip PROTOCOL
   #define LS_RESET   'X'  // off led strip and reset any variable to default
@@ -27,8 +26,10 @@ TYPES:
                           //    e.g 0300, 30 seconds. Default 0 NO timeout
   #define LS_PAUSE   'P'  // (pause)   with VALUE:MS in 4 ascii in decs of seconds filled with zeors 
                           //    e.g 4000, 4  seconds. Default 0 no pause
-  #define LS_DEBUG_ON  'O' // Enable debug
-  #define LS_DEBUG_OFF 'o' // Disable debug
+  #define LS_DEBUG_ON  'D' // Enable debug
+  #define LS_DEBUG_OFF 'd' // Disable debug
+  #define LS_STATUS_REQ 'S'  // Ask for status information over this serial protocol answer TODO spec output
+
   #define LS_MODE    'M'  // (mode) with <SUBTYPE>
     #define LS_MODE_COLOR          'A'  // (all) setup all leds with general settings: C,T,P.
     #define LS_MODE_ROLLING_TEST   'T'  // rolling 3 test colors. With general settings: T,P.
@@ -57,7 +58,8 @@ class LSEM
   bool isIdle(){return ((_mode==0) && (_queue.count()==0)); }
 
 
-  bool _rollingUnpaused;  //public only for timer callback...
+  bool timeoutExpired;
+  bool pauseExpired;
 
   bool getDebug()       {return _debug;}
   void setDebug(bool b);
@@ -67,8 +69,6 @@ class LSEM
   stringQueue _queue;
   char _mode;
   uint8_t _one;
-  int  _timerTimeout; //T
-  int  _timerPause; //P
   CRGB _color; //C
   SimpleTimer _timers;
   int _rollingTurn;
@@ -76,7 +76,10 @@ class LSEM
   int _direction;
   bool _debug;
 
-
+  int  _timeout; //T
+  int  _pause; //P
+  int  _timerTimeout; 
+  int  _timerPause; 
 
 
   void _setMode(char m);
@@ -96,8 +99,6 @@ class LSEM
   void _doRainbow();
   void _doNoise();
   void _setAllLeds(CRGB color);
-
-
 };
 
 extern class LSEM LSEM;

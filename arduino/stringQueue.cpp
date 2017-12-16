@@ -45,10 +45,18 @@ char *stringQueue::pop(char* out)
 void stringQueue::pop(void)
 {
  char *ref=peek();
- if (0==ref) return;
- free(ref);_q[_head]=0;
- if (count()==1) {_head=-1; _tail=-1;}
- _head=(_head+1 % MAX_STRINGS_IN_QUEUE);
+ if (0==ref) 
+   return;
+
+ free(ref);
+ _q[_head]=0;
+
+ if (count()==1) {
+   _head=-1; _tail=-1;
+ }
+ else {
+   _head=(_head+1 % MAX_STRINGS_IN_QUEUE);
+ }
 }
 //------------------------------------------------
 char *stringQueue::peek(char* out)

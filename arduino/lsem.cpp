@@ -12,20 +12,22 @@ class LSEM LSEM;
 #define RIGHT 0
 #define LEFT  1
 
+#define NO_MODE  '0'
+
 //------------------------------------------------
 //-------    TIMER CALLBACKS     -----------------
 //------------------------------------------------
 void _callbackTimeout(void)
 {
-  if (_debug) {Serial.println(F("DEBUG: callbackTimeout"));}
-
+  if (LSEM.getDebug()) {Serial.println(F("DEBUG: callbackTimeout"));}
   LSEM.reset();
+  LSEM.timeoutExpired=true;
 }
 //------------------------------------------------
 void _callbackPause(void)
 {
   //Serial.println(F("DEBUG: callbackPause");
-  LSEM._rollingUnpaused=true;
+  LSEM.pauseExpired=true;
 }
 
 //------------------------------------------------
@@ -35,13 +37,14 @@ LSEM::LSEM()
 {
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(_leds, NUM_LEDS);
   _fullReset();
+  randomSeed(analogRead(0));
 }
 //------------------------------------------------
 void LSEM::refresh(void)
 {
   _timers.run();
 
-  if ( (_mode==0) && (_queue.count()>0) ){
+  if ( (_mode==NO_MODE) && (_queue.count()>0) ){
     if (_debug){_debugInfo();}
     processCommands(_queue.peek());
     _queue.pop();
@@ -90,27 +93,32 @@ void LSEM::processCommands(char *inputString)
 void LSEM::reset(void)
 {
    if (_debug) {Serial.print(F("DEBUG:LSEM::reset"));}
-  _mode=0;
+  _mode=NO_MODE;
   _one=0;
   _color=CRGB::Black; 
   _setAllLeds(CRGB::Black);
   _rollingTurn=0;
-  _rollingUnpaused=false;
   _rollingTestColor=0x0000FF;
+  _direction=RIGHT;
+  _debug=false;
+
+  timeoutExpired=false;
+  pauseExpired=false;
   _timers.deleteTimer(_timerTimeout);
   _timerTimeout=-1;
   _timers.deleteTimer(_timerPause);
   _timerPause=-1;
-  _direction=RIGHT;
-  _debug=false;
+  _timeout=0; //T
+  _pause=0; //P
+
 }
 
 //------------------------------------------------
 void LSEM::setDebug(bool b)
 {
   _debug=b;
-  if (b) Serial.print(F("DEBUG: Debug is enable"));
-  else   Serial.print(F("DEBUG: Debug is disable"));
+  if (b) Serial.println(F("DEBUG: Debug is enable"));
+  else   Serial.println(F("DEBUG: Debug is disable"));
 }
 
 
@@ -129,20 +137,14 @@ uint8_t LSEM::_readSerialCommand(char *cmd) {
 
   len=strlen(cmd);
   if (_debug){Serial.print(F("DEBUG: Parsing:")); Serial.println(cmd);  }
-  switch(cmd[index]){
-    case TYPE_STATUS:
-      //TODO
-      break;
+  switch(cmd[index++]){
     case TYPE_LED:
-      index++;
       if ((len-index) <=0)  {if (_debug){Serial.println(F("DEBUG: incomplete led command"));} goto exitingCmd;}
-      switch(cmd[index]){
+      switch(cmd[index++]){
         case LS_RESET:
-          index++;
           reset();
           break;
         case LS_COLOR:
-          index++;
           if ((len-(index+8)) <0) {if (_debug){Serial.println(F("DEBUG: incomplete ls_color"));} goto exitingCmd;}
           if (_debug){Serial.print(F("DEBUG: new LS color:"));}
           sscanf(&cmd[index],"%X",&br); index+=3;
@@ -156,31 +158,31 @@ uint8_t LSEM::_readSerialCommand(char *cmd) {
           _setColor(color);
           break;
         case LS_TIMEOUT:
-          index++;
           if ((len-(index+4)) <0) {if (_debug){Serial.println(F("DEBUG: incomplete ls_timeout"));} goto exitingCmd;}
           _setTimeout((uint16_t)strtol(&cmd[index],kk,10));
           index+=4;
           break;
         case LS_PAUSE:
-          index++;
           if ((len-(index+4)) <0) {if (_debug){Serial.println(F("DEBUG: incomplete ls_timeout"));} goto exitingCmd;}
           _setPause((uint16_t)strtol(&cmd[index],kk,10));
           index+=4;
           break;
         case LS_ENQUEUE:
-          index++;
           _queue.push(&cmd[index]);
           if (_debug){_debugInfo();}
           index+=len;
           break;
         case LS_DEBUG_ON:
-          setDebug(true); index++;
+          setDebug(true);
+          break;
         case LS_DEBUG_OFF:
-          setDebug(false); index++;
+          setDebug(false);
+          break;
+        case LS_STATUS_REQ:
+          _debugInfo();
           break;
         case LS_MODE:
-          index++;
-          m=cmd[index];
+          m=cmd[index++];
           bk=_getMode();
           _setMode(m);
           switch(m){
@@ -193,10 +195,8 @@ uint8_t LSEM::_readSerialCommand(char *cmd) {
               case LS_MODE_RROLLING_COLOR:
               case LS_MODE_KNIGHT_RIDER:
               case LS_MODE_RKNIGHT_RIDER:
-                index++;
                 break;
               case LS_MODE_ONE:
-                index++;
                 if ((len-(index+2)) <0) {if (_debug){Serial.println(F("DEBUG: incomplete ls_mode_one"));} goto exitingCmd;}
                 _setLed((uint8_t)strtol(&cmd[index],kk,10));
                 index+=2;
@@ -234,6 +234,8 @@ void LSEM::_resetQueue(void)
 //------------------------------------------------
 void LSEM::_setTimeout(uint16_t t)
 {
+  _timeout=t;
+
   if (_timerTimeout >= 0) _timers.deleteTimer(_timerTimeout);
 
   _timerTimeout=-1;
@@ -250,6 +252,7 @@ void LSEM::_setTimeout(uint16_t t)
 //------------------------------------------------
 void LSEM::_setPause(uint16_t t)
 {
+  _pause=t;
   if (_timerPause >= 0) _timers.deleteTimer(_timerPause);
   _timerPause=-1;
   if (t>0){
@@ -290,24 +293,6 @@ void LSEM::_setLed(uint8_t led)
   _one=led;
 }
 
-
-//------------------------------------------------
-void LSEM::_debugInfo()
-{
-  char aux[100];
-  char *str=0;
-  sprintf(aux,"DEBUG: LD: Current mode 0x%X. Timeout:TODO. Pause:TODO. Q: Commands queued:%i.Head %i, Tail %i", _mode,_queue.count(),_queue.getHead(),_queue.getTail());
-  Serial.println(aux);
-  for (int i=0;i<MAX_STRINGS_IN_QUEUE;i++){
-    str=_queue.peek(i);
-    if (str) {
-      Serial.print(F("  DEBUG Item["));
-      Serial.print(i);
-      Serial.print(F("]:")); 
-      Serial.println(aux);
-    }
-  }
-}
 //------------------------------------------------
 void LSEM::_doOne()
 {
@@ -327,8 +312,7 @@ void LSEM::_setAllLeds(CRGB color)
 //------------------------------------------------
 void LSEM::_doRollingColor(CRGB color,bool reverse,bool knightRider)
 {
- if (_rollingUnpaused)
- {
+   if (!pauseExpired) return;
    //Setup the led to roll
    if (_rollingTurn>=NUM_LEDS) 
    {  
@@ -360,8 +344,7 @@ void LSEM::_doRollingColor(CRGB color,bool reverse,bool knightRider)
   }
 
   //Mark to wait until the pause period
-   _rollingUnpaused=false;
- }
+   pauseExpired=false;
 }
 
 //------------------------------------------------
@@ -389,6 +372,42 @@ void LSEM::_doRainbow()
 }
 //------------------------------------------------
 void LSEM::_doNoise()
-{ //TODO
+{ 
+/*  uint8_t br,bg,bb;
+
+random(max)
+
+  color=(uint32_t) ( 
+                     (((long int)(br))<<16 ) | 
+                     (((long int)(bg))<<8)   | 
+                     ((long int)(bb))  );*/
+  if (!pauseExpired) return;
+  for (int i=0;i<NUM_LEDS;i++)
+  {
+    _leds[i] = random(0xFFFFFF);
+  }
+  pauseExpired=false;
+}
+
+//------------------------------------------------
+void LSEM::_debugInfo()
+{
+  char *str=0;
+  Serial.print(":LSDEBUG");
+  Serial.print(":LM"); Serial.print(_mode);
+  Serial.print(":LT"); Serial.print(_timeout);
+  Serial.print(":LP"); Serial.print(_pause);
+  Serial.print(":LC"); Serial.print((long int)_color);
+  Serial.print(":Lq"); Serial.print(_queue.count());
+  Serial.print(":Lh"); Serial.print(_queue.getHead());
+  Serial.print(":Lt"); Serial.print(_queue.getTail());
+  for (int i=0;i<MAX_STRINGS_IN_QUEUE;i++){
+    str=_queue.peek(i);
+    if (str) {
+     Serial.print(":Lt");Serial.print(i);
+     Serial.print(str);
+    }
+  }
+  Serial.println("");
 }
 
