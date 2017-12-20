@@ -12,7 +12,6 @@ class LSEM LSEM;
 #define RIGHT 0
 #define LEFT  1
 
-#define NO_MODE  '0'
 
 //------------------------------------------------
 //-------    TIMER CALLBACKS     -----------------
@@ -20,14 +19,13 @@ class LSEM LSEM;
 void _callbackTimeout(void)
 {
   if (LSEM.getDebug()) {Serial.println(F("DEBUG: callbackTimeout"));}
-  LSEM.reset();
-  LSEM.timeoutExpired=true;
+  LSEM.callbackTimeout();
 }
 //------------------------------------------------
 void _callbackPause(void)
 {
   //Serial.println(F("DEBUG: callbackPause");
-  LSEM.pauseExpired=true;
+  LSEM.callbackPause();
 }
 
 //------------------------------------------------
@@ -40,14 +38,28 @@ LSEM::LSEM()
   randomSeed(analogRead(0));
 }
 //------------------------------------------------
+void LSEM::callbackTimeout(void)
+{
+  _timeoutExpired=true;
+  _mode=LS_MODE_ZERO;
+}
+//------------------------------------------------
+void LSEM::callbackPause(void)
+{
+  _pauseExpired=true;
+}
+//------------------------------------------------
 void LSEM::refresh(void)
 {
   _timers.run();
 
-  if ( (_mode==NO_MODE) && (_queue.count()>0) ){
-    if (_debug){_debugInfo();}
-    processCommands(_queue.peek());
-    _queue.pop();
+  if (_mode==LS_MODE_ZERO) {
+    if (_queue.count()>0)
+    {
+      if (_debug){_debugInfo();}
+      processCommands(_queue.peek());
+      _queue.pop();
+    }
   }
 
   switch(_mode) {
@@ -93,7 +105,7 @@ void LSEM::processCommands(char *inputString)
 void LSEM::reset(void)
 {
    if (_debug) {Serial.print(F("DEBUG:LSEM::reset"));}
-  _mode=NO_MODE;
+  _mode=LS_MODE_ZERO;
   _one=0;
   _color=CRGB::Black; 
   _setAllLeds(CRGB::Black);
@@ -102,14 +114,14 @@ void LSEM::reset(void)
   _direction=RIGHT;
   _debug=false;
 
-  timeoutExpired=false;
-  pauseExpired=false;
+  _timeoutExpired=false;
+  _pauseExpired=false;
   _timers.deleteTimer(_timerTimeout);
   _timerTimeout=-1;
   _timers.deleteTimer(_timerPause);
   _timerPause=-1;
   _timeout=0; //T
-  _pause=0; //P
+  _pause=0;   //P
 
 }
 
@@ -240,7 +252,7 @@ void LSEM::_setTimeout(uint16_t t)
 
   _timerTimeout=-1;
   if (t>0){
-    _timerTimeout=_timers.setTimeout((long int)t*100,_callbackTimeout);
+    _timerTimeout=_timers.setInterval((long int)t*100,_callbackTimeout);
     if (_debug){
       Serial.print(F("DEBUG: setTimeout to "));
       Serial.print(t*100);
@@ -312,7 +324,7 @@ void LSEM::_setAllLeds(CRGB color)
 //------------------------------------------------
 void LSEM::_doRollingColor(CRGB color,bool reverse,bool knightRider)
 {
-   if (!pauseExpired) return;
+   if (!_pauseExpired) return;
    //Setup the led to roll
    if (_rollingTurn>=NUM_LEDS) 
    {  
@@ -344,7 +356,7 @@ void LSEM::_doRollingColor(CRGB color,bool reverse,bool knightRider)
   }
 
   //Mark to wait until the pause period
-   pauseExpired=false;
+   _pauseExpired=false;
 }
 
 //------------------------------------------------
@@ -381,12 +393,12 @@ random(max)
                      (((long int)(br))<<16 ) | 
                      (((long int)(bg))<<8)   | 
                      ((long int)(bb))  );*/
-  if (!pauseExpired) return;
+  if (!_pauseExpired) return;
   for (int i=0;i<NUM_LEDS;i++)
   {
     _leds[i] = random(0xFFFFFF);
   }
-  pauseExpired=false;
+  _pauseExpired=false;
 }
 
 //------------------------------------------------

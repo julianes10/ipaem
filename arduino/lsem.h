@@ -31,6 +31,7 @@ TYPES:
   #define LS_STATUS_REQ 'S'  // Ask for status information over this serial protocol answer TODO spec output
 
   #define LS_MODE    'M'  // (mode) with <SUBTYPE>
+    #define LS_MODE_ZERO           '0'  // no mode. All leds forced to black. Standby.
     #define LS_MODE_COLOR          'A'  // (all) setup all leds with general settings: C,T,P.
     #define LS_MODE_ROLLING_TEST   'T'  // rolling 3 test colors. With general settings: T,P.
     #define LS_MODE_RROLLING_TEST  't'  // reverse rolling 3 test colors. With general settings: T,P.
@@ -55,14 +56,18 @@ class LSEM
 
   void reset();
   void processCommands(char *inputString);
-  bool isIdle(){return ((_mode==0) && (_queue.count()==0)); }
+  bool isIdle(){return ((_mode==LS_MODE_ZERO) && (_queue.count()==0)); }
 
 
-  bool timeoutExpired;
-  bool pauseExpired;
+
+
+  void callbackTimeout(void);
+  void callbackPause(void);
 
   bool getDebug()       {return _debug;}
   void setDebug(bool b);
+
+
 
  private:
   CRGB _leds[NUM_LEDS];
@@ -80,6 +85,8 @@ class LSEM
   int  _pause; //P
   int  _timerTimeout; 
   int  _timerPause; 
+  bool _timeoutExpired;
+  bool _pauseExpired;
 
 
   void _setMode(char m);

@@ -1,6 +1,6 @@
-#Dependencies desription on top of raspbian 8 jessie no-desktop version with noobs:
+#Dependencies description on top of raspbian 8 jessie no-desktop version with noobs:
 
-## Basic tools
+# Basic tools
 --------------
 sudo apt-get install vim
 sudo apt-get install git
@@ -10,7 +10,7 @@ apt-get install python-pip python-dev build-essential
 
 
 
-##Snowboy stuff dependencies: 
+# Snowboy stuff dependencies: 
 ------------------------------
 cd
 wget http://portaudio.com/archives/pa_stable_v190600_20161030.tgz
@@ -33,7 +33,7 @@ ln -s rpi-arm-raspbian-8.0-1.1.1 snowboy
 #note run defining PYTHONPATH=snowboy snowboyHotword.py
 
 
-## ga stuff dependencies for gaIpaDispatcher:
+# ga stuff dependencies for gaIpaDispatcher:
 ## MainSourcehttps://developers.google.com/assistant/sdk/develop/python/run-sample
 -----------------------------------------------------------------------------------
 sudo apt-get update
@@ -44,8 +44,8 @@ source env/bin/activate
 python -m pip install --upgrade google-assistant-library
 
 pip install flask
-
-# An put your json google credentials in etc
+  
+## An put your json google credentials in etc
 # Check if needed https://developers.google.com/assistant/sdk/develop/python/config-dev-project-and-account
 (env) pi@pi32:~/ipaem $ tree /etc/ipaem/
 /etc/ipaem/
@@ -58,7 +58,15 @@ pip install flask
 #3rd parties
 sudo apt-get install kodi
 
-#Setup for kodi
+##Setup for kodi
 -Install tunein addon, download, transfer and install from zip in kodi https://github.com/brianhornsby/plugin.audio.tuneinradio/releases/download/v3.0.0/plugin.audio.tuneinradio-3.0.0.zip, allow unknow sources first.
 -add external control on 8080 for jsonrpc working
+
+
+#Arduino deps
+## To debug and develop really
+sudo apt-get install minicom 
+sudo apt-get install arduino-mk 
+
+ 
 
