@@ -2,7 +2,7 @@
 # Deploy and setup release into pi system
 source ./commonvars.sh
 PI_USER=pi
-PI_IPNAME=192.168.1.44
+PI_IPNAME=pi32
 PI_PORT=22
 
 
@@ -74,7 +74,8 @@ elif [ "$1" == "remote" ]; then
     if [ "$3" == "config" ]; then
        DEPLOY_CONFIG="sudo cp /opt/ipaem/etc/ipaem.conf.example /etc/ipaem/ipaem.conf;"
     fi
-    ssh -p $PI_PORT pi@$PI_IPNAME "sudo systemctl stop ipaemg ipaems kodi noip2;sudo rm -rf $DEPLOY_FOLDER; sudo mv /home/pi/ipaem.tmp $DEPLOY_FOLDER;$DEPLOY_CONFIG sudo systemctl start ipaemg ipaems kodi noip2;sudo systemctl status ipaemg ipaems kodi noip2;"
+    DEPLOY_ARDUINO="cd /opt/ipaem/install && sudo ./deployArduino.sh;"
+    ssh -p $PI_PORT pi@$PI_IPNAME "sudo systemctl stop ipaemg ipaems kodi noip2;sudo rm -rf $DEPLOY_FOLDER; sudo mv /home/pi/ipaem.tmp $DEPLOY_FOLDER;$DEPLOY_CONFIG sudo systemctl start ipaemg ipaems kodi noip2;sudo systemctl status ipaemg ipaems kodi noip2;$DEPLOY_ARDUINO"
   else
     echo "ERROR: no extra option selected for deployed remotely"
     usage
