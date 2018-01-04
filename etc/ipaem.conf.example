@@ -3,7 +3,7 @@
            "logExceptions":"/tmp/ipaeme.log"
   },
   "audios": {
-              "boot":"/home/pi/audios/ongoing.wav",
+              "bootNO":"/home/pi/audios/ongoing.wav",
               "ack":"/home/pi/audios/shortBeep.wav",
               "gawaiting":"/home/pi/audios/ding.wav",
               "gafinished":"/home/pi/audios/dong.wav",
