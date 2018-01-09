@@ -23,10 +23,14 @@ function usage
 ################################################
 function playVideoId 
 {
-  echo "Asking youtube to play VideoID \"$1\"..."
+  local temp
+  temp="${1%\"}"
+  temp="${temp#\"}"
+
+  echo "Asking youtube to play VideoID \"$temp\"..."
   curl -i -X POST http://localhost:8080/jsonrpc  \
     -H "Content-Type: application/json" \
-    --data '{ "jsonrpc": "2.0", "method": "Player.Open", "params": [{"file" : "plugin://plugin.video.youtube/?action=play_video&videoid='$1'"}], "id": 1 }'
+    --data '{ "jsonrpc": "2.0", "method": "Player.Open", "params": [{"file" : "plugin://plugin.video.youtube/?action=play_video&videoid='$temp'"}], "id": 1 }'
 }  
 
 
@@ -45,17 +49,7 @@ function stopPlayer
 
 
 ################################################
-### Picked from https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
-function urlencode 
-{
-    if [[ $? != 3 ]]; then
-        echo "Unexpected error" 1>&2
-        return 2
-    fi
-    #echo "${data##/?}"
-    echo "$1"
-}
-################################################
+### Picked partially from https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
 function searchString 
 {
   local data
@@ -64,7 +58,7 @@ function searchString
   encoded="${data##/?}"
   echo "Searching in Youtube: \"$1\" that is encoded as \"$encoded\"..."
   echo "Saving results in file: \"$2\"..."
-  curl -s https://www.youtube.com/results?search_query="$encoded" | sed -ne 's/.*\(data-video-ids="[^ ]*"\).*/\1/p' | uniq > $2
+  curl -s https://www.youtube.com/results?search_query="$encoded" | sed -ne 's/.*\(data-video-ids="[^ ]*"\).*/\1/p' | sort | uniq > $2
 } 
 
 ################################################
@@ -86,15 +80,35 @@ elif [ "$1" == "--url" ]; then
 elif [ "$1" == "--video-id" ]; then
   playVideoId $2
 elif [ "$1" == "--search" ]; then
-  searchString "$2" "$3"
-  echo "TODO PLAY FIRST"
-elif [ "$1" == "--random" ]; then
+  searchString "$2" "$3" 
+  video=$( head -1 $3 | cut -d'=' -f2 )
+  sed -i "s/$video/$video PLAYING/" $3
+  playVideoId $video
+elif [ "$1" == "--search-random" ]; then
   searchString "$2" "$3"
   echo "TODO PLAY RANDOM"
 elif [ "$1" == "--next" ]; then
-  echo "TODO PLAY NEXT from saved list $2"
+  video=$( grep " PLAYING" $2 | cut -d'=' -f2 )
+  echo "Current video id playing $video..."
+  nextvideo=$( grep " PLAYING" -C1 $2 | tail -1 | grep -v " PLAYING" )
+  if [ "$nextvideo" == "" ]; then
+    echo "Start again from first"
+    nextvideo=$( head -1 $2 | cut -d'=' -f2 )
+  fi
+  sed -i "s/ PLAYING//" $2
+  sed -i "s/$nextvideo/$nextvideo PLAYING/" $2
+  playVideoId $nextvideo
 elif [ "$1" == "--back" ]; then
-  echo "TODO PLAY BACK from saved list $2"
+  video=$( grep " PLAYING" $2 | cut -d'=' -f2 )
+  echo "Current video id playing $video..."
+  nextvideo=$( grep " PLAYING" -C1 $2 | head -1 | grep -v " PLAYING" )
+  if [ "$nextvideo" == "" ]; then
+    echo "Start again from last"
+    nextvideo=$( tail -1 $2 | cut -d'=' -f2 )
+  fi
+  sed -i "s/ PLAYING//" $2
+  sed -i "s/$nextvideo/$nextvideo PLAYING/" $2
+  playVideoId $nextvideo
 else
   echo "ERROR, unknown option $1"
   usage
