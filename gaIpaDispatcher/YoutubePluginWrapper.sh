@@ -86,11 +86,17 @@ elif [ "$1" == "--search" ]; then
   playVideoId $video
 elif [ "$1" == "--search-random" ]; then
   searchString "$2" "$3"
-  echo "TODO PLAY RANDOM"
+  lines=$( wc -l $3 | cut -d' ' -f1 )
+  echo $lines
+  export lines
+  targetline=$( echo $RANDOM % $lines + 1 | bc )
+  video=$( head -$targetline $3 | tail -1 | cut -d'=' -f2 )
+  sed -i "s/$video/$video PLAYING/" $3
+  playVideoId $video
 elif [ "$1" == "--next" ]; then
   video=$( grep " PLAYING" $2 | cut -d'=' -f2 )
   echo "Current video id playing $video..."
-  nextvideo=$( grep " PLAYING" -C1 $2 | tail -1 | grep -v " PLAYING" )
+  nextvideo=$( grep " PLAYING" -C1 $2 | tail -1 | grep -v " PLAYING" | cut -d'=' -f2 )
   if [ "$nextvideo" == "" ]; then
     echo "Start again from first"
     nextvideo=$( head -1 $2 | cut -d'=' -f2 )
