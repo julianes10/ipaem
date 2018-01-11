@@ -54,6 +54,23 @@
                                           "output": {"feedback": "ack"}}
                         }
                 },
+      "Youtube-Search":  { "input":"find music",
+                    "output":
+                        {  
+    			                "background":true,
+                          "next" :"chat"
+                        },
+                    "nextLevel": 
+                        { 
+                          "commonOutput" : {
+                              "cmd": "/opt/ipaem/gaIpaDispatcher/YoutubePluginWrapper.sh ARG1 \"SPEECH2TEXT\" /tmp/ipaem.ysf",
+    			                    "background":true,
+                              "feedback": "waitpls",
+                              "next" :"end" },
+                          "random":    { "input": "random",  "arg1": "--search-random"},
+                          "find":      { "input": "find",    "arg1": "--search"}
+                        }
+                },
       "Youtube":  { "input":"music",
                     "output":
                         {  
@@ -67,10 +84,12 @@
     			                    "background":true,
                               "feedback": "waitpls",
                               "next" :"end" },
-                          "baker":   { "input": "baker",   "arg1": "https://www.youtube.com/watch?v=8VJ4A_Cw97Q"}, 
-                          "piano":  { "input": "piano jazz",  "arg1": "https://www.youtube.com/watch?v=82TD06U4ppA"}, 
-                          "chet":    { "input": "chet",  "arg1": "https://www.youtube.com/watch?v=KWzJGRh_Tsw"},
-                          "stop" :   { "input": "stop",         "arg1": "STOP", 
+                          "baker":   { "input": "baker",   "arg1": "--url https://www.youtube.com/watch?v=8VJ4A_Cw97Q"}, 
+                          "piano":  { "input": "piano jazz",  "arg1": "--url https://www.youtube.com/watch?v=82TD06U4ppA"}, 
+                          "chet":    { "input": "chet",  "arg1": "--url https://www.youtube.com/watch?v=KWzJGRh_Tsw"},
+                          "next":    { "input": "next",  "arg1": "--next /tmp/ipaem.ysf"},
+                          "back":    { "input": "back",  "arg1": "--back /tmp/ipaem.ysf"},
+                          "stop" :   { "input": "stop",         "arg1": "--stop", 
                                           "output": {"feedback": "ack"}}
                         }
                 },

@@ -43,6 +43,7 @@ from helper import *
 
 from flask import Flask, jsonify,abort,make_response,request, url_for
 
+from collections import OrderedDict
 
 
 '''----------------------------------------------------------'''
@@ -138,25 +139,35 @@ def getParam(param,mainLevel,currentLevel):
     return None
 '''----------------------------------------------------------'''
 '''----------------    getCmd               -----------------'''
-def getCmd(mainLevel,currentLevel):
+def getCmd(mainLevel,currentLevel,textStripped):
     cmd2return=None
     cmd2return=getParam("cmd",mainLevel,currentLevel)
     helper.internalLogger.debug("Cmd to execute '{0}'".format(cmd2return))    
-    if "arg1" in currentLevel and cmd2return is not None:
-      helper.internalLogger.debug("Custom cmd with parameter {0}'".format(currentLevel["arg1"]))      
-      return cmd2return.replace("ARG1",currentLevel["arg1"])
+    if cmd2return is not None:
+      if  "arg1" in currentLevel:
+        helper.internalLogger.debug("Custom cmd with parameter {0}'".format(currentLevel["arg1"]))      
+        cmd2return=cmd2return.replace("ARG1",currentLevel["arg1"])
+    if cmd2return is not None:
+      if "SPEECH2TEXT" in cmd2return:
+        helper.internalLogger.debug("Custom cmd with SPEECH2TEXT {0}'".format(textStripped))      
+        cmd2return=cmd2return.replace("SPEECH2TEXT",textStripped)
+
     return cmd2return
 
 
 '''----------------------------------------------------------'''
 '''----------------    checkAnswer          -----------------'''
 
-def checkAnswer(rootActions,text,level):
+def checkAnswer(rootActions,text,level,textStripped):
     helper.internalLogger.debug("Checking '{0}' on level {1}...".format(text,level))
     if text is None:
       return None,None
     if text=="":
       return None,None
+    if textStripped=="":
+      textStripped=text
+
+
    
     actions=rootActions
     if level is not None:
@@ -168,12 +179,13 @@ def checkAnswer(rootActions,text,level):
          continue
       if text.lower() in item['input'] or item['input'] in text.lower():
          helper.internalLogger.debug("Action found over '{0}': {1}".format(text,key))
-         cmd=getCmd(actions,item)
+         textStripped=textStripped.replace(item['input'],"",1)
+         cmd=getCmd(actions,item,textStripped)
          runAction(cmd,getParam("background",actions,item))   
          rt1=getParam("next",actions,item)
          rt2=None
          if "nextLevel" in item:
-            rt1,rt2=checkAnswer(rootActions,text,item["nextLevel"]) 
+            rt1,rt2=checkAnswer(rootActions,text,item["nextLevel"],textStripped) 
          muteLocalOutput(False)     #TODO RADIO RECOVER¡¡¡ 
          fb=getParam("feedback",actions,item)
          playSound(fb,True)
@@ -196,7 +208,7 @@ def process_event(cfg_Actions,event,ga,level):
         muteLocalOutput(True)     #TODO RADIO MUTE TOO¡¡¡  
     elif event.type == EventType.ON_RECOGNIZING_SPEECH_FINISHED:
         helper.internalLogger.debug("Let's process what google say you have said")
-        return checkAnswer(cfg_Actions,event.args['text'],level)
+        return checkAnswer(cfg_Actions,event.args['text'],level,"")
     elif event.type == EventType.ON_RESPONDING_STARTED:
         muteLocalOutput(False)     #TODO RADIO NOT YET ¡¡¡ 
     elif ( event.type == EventType.ON_RESPONDING_FINISHED or
@@ -241,7 +253,7 @@ def main(configfile,cred):
   cfg_log_exceptions="ipaeme.log"
   # Let's fetch data
   with open(configfile) as json_data:
-      configuration = json.load(json_data)
+      configuration = json.load(json_data, object_pairs_hook=OrderedDict)
   #Get log names
   if "log" in configuration:
       if "logTraces" in configuration["log"]:

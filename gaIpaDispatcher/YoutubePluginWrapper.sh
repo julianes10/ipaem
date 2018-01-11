@@ -107,7 +107,7 @@ elif [ "$1" == "--next" ]; then
 elif [ "$1" == "--back" ]; then
   video=$( grep " PLAYING" $2 | cut -d'=' -f2 )
   echo "Current video id playing $video..."
-  nextvideo=$( grep " PLAYING" -C1 $2 | head -1 | grep -v " PLAYING" )
+  nextvideo=$( grep " PLAYING" -C1 $2 | head -1 | grep -v " PLAYING" | cut -d'=' -f2 )
   if [ "$nextvideo" == "" ]; then
     echo "Start again from last"
     nextvideo=$( tail -1 $2 | cut -d'=' -f2 )

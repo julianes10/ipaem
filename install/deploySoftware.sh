@@ -8,7 +8,8 @@ PI_PORT=22
 
 echo "Here we go: $@"
 usage(){
-	echo "Usage: $0 (latest | tag <HASH> | local | remote  (latest | tag <HASH> | local) [config])"
+	echo "Usage: $0 (latest | tag <HASH> | local | remote  (latest | tag <HASH> | local) [arduino][config])"
+  echo "NOTE: ONLY remote local arduino config is fully supported."
 	exit 1
 }
 rt=55
@@ -18,6 +19,24 @@ if [ "$1" == "-h" -o "$1" == "--help" ]; then
   usage
   exit 0
 fi
+
+#---------------------------------------------------------------------------
+deployConfig=0
+deployArduino=0
+for i in "$@"
+do
+case $i in
+    config)
+      deployConfig=1
+    ;;
+    arduino)
+      deployArduino=1
+    ;;
+esac
+done
+
+#-----------------------------------------------------------------
+
 
 
 aux="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -68,13 +87,16 @@ elif [ "$1" == "remote" ]; then
   elif [ "$2" == "local" ]; then
     echo "Copying local files"
     ssh -p $PI_PORT pi@$PI_IPNAME "sudo rm -rf /home/pi/ipaem.tmp; mkdir -p /home/pi/ipaem.tmp"
-    export GLOBIGNORE="./../../ipaem/.git";
+    export GLOBIGNORE="./../../ipaem/.git:./../../ipaem/arduino/build-uno";
     scp -r -P $PI_PORT ./../../ipaem/* $PI_USER@$PI_IPNAME:/home/pi/ipaem.tmp/
     DEPLOY_CONFIG=""
-    if [ "$3" == "config" ]; then
+    if [ $deployConfig -eq 1 ]; then
        DEPLOY_CONFIG="sudo cp /opt/ipaem/etc/ipaem.conf.example /etc/ipaem/ipaem.conf;"
     fi
-    DEPLOY_ARDUINO="cd /opt/ipaem/install && sudo ./deployArduino.sh;"
+    DEPLOY_ARDUINO=""
+    if [ $deployArduino -eq 1 ]; then
+       DEPLOY_ARDUINO="cd /opt/ipaem/install && sudo ./deployArduino.sh;"
+    fi
     ssh -p $PI_PORT pi@$PI_IPNAME "sudo systemctl stop ipaemg ipaems kodi noip2;sudo rm -rf $DEPLOY_FOLDER; sudo mv /home/pi/ipaem.tmp $DEPLOY_FOLDER;$DEPLOY_CONFIG sudo systemctl start ipaemg ipaems kodi noip2;sudo systemctl status ipaemg ipaems kodi noip2;$DEPLOY_ARDUINO"
   else
     echo "ERROR: no extra option selected for deployed remotely"
