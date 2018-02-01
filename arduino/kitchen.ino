@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "lsem.h"
 #include "pirem.h"
+#include "photoResistor.h"
 
 
 //------------------------------------------------
@@ -18,6 +19,7 @@ const char inputPIRHIGH2LOWstring[]  PROGMEM = {":LCFF,FF,FF:LT0030:LMA:LQ:LT005
 const char inputPIRBack2HIGHstring[] PROGMEM = {":LCFF,FF,FF:LT0000:LMA"};
 
 int GLBpirInfo=0;
+bool GLBisDark=true;
 
 
 //------------------------------------------------
@@ -96,8 +98,9 @@ void STATE_idle(void)
     processSerialInputString();
     GLBptrStateFunc=STATE_LDcmd;
   }
-  else if ( (GLBpirInfo==PIR_INFO_LOW2HIGH) ||  
-            (GLBpirInfo==PIR_INFO_HIGH2HIGH) ){
+  else if ( GLBisDark &&
+            ( (GLBpirInfo==PIR_INFO_LOW2HIGH) ||  
+              (GLBpirInfo==PIR_INFO_HIGH2HIGH) )  ) {
     Serial.println(F("DEBUG: inputPIRLOW2HIGHstring..."));
     strcpy_P(GLBauxString,(char*)inputPIRLOW2HIGHstring);
     LSEM.processCommands(GLBauxString);
@@ -157,7 +160,7 @@ void loop() {
   GLBpirInfo=PIREM.refresh();
 
   // Read light sensor
-  //TODO
+  GLBisDark=PR.refresh();
 
   //--------- TIME TO THINK MY FRIEND -------------
   // State machine as main controller execution
