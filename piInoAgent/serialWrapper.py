@@ -22,12 +22,12 @@ class serialWrapper():
       try:
         helper.internalLogger.info("Try to reconnect to port: {0}".format(self.port))
         self.ser = serial.Serial(
-        port=self.port,\
-        baudrate=self.speed,\
-        parity=serial.PARITY_NONE,\
-        stopbits=serial.STOPBITS_ONE,\
-        bytesize=serial.EIGHTBITS,\
-        timeout=self.timeout)
+          port=self.port,\
+          baudrate=self.speed,\
+          parity=serial.PARITY_NONE,\
+          stopbits=serial.STOPBITS_ONE,\
+          bytesize=serial.EIGHTBITS,\
+          timeout=self.timeout)
       except KeyboardInterrupt:
         print("Ok ok, quitting")
         sys.exit(1)
@@ -39,14 +39,14 @@ class serialWrapper():
         return False
       return True
 
-    def getData(self):
-      helper.internalLogger.debug("Getting data led strip {0}...".format(self.port))
+    def readCommand(self):
+      helper.internalLogger.debug("Getting info from arduino {0}...".format(self.port))
       #Check ser status
       if self.ser==None:
         if self.tryReconnect():
            helper.internalLogger.error('Serial line ready to be read.')
         else:
-           helper.internalLogger.error('Serial line is not seem to be read.') 
+           helper.internalLogger.error('Serial line is not seem to be ready.') 
            time.sleep(10)
            return None;
           
@@ -76,8 +76,8 @@ class serialWrapper():
         else:
             helper.internalLogger.debug("No data available on LD yet...")
 
-    def sendComand(self):
-      helper.internalLogger.debug("Sending command to led strip {0}...".format(self.port))
+    def writeCommand(self,cmd):
+      helper.internalLogger.debug("Sending command to arduino {0}:{1}...".format(self.port,cmd))
       #Check ser status
       if self.ser==None:
         if self.tryReconnect():
@@ -86,7 +86,7 @@ class serialWrapper():
           helper.internalLogger.error('Serial line is not seem to be read.') 
           time.sleep(10)
           return None;
-      self.ser.writeline("TEST TODO")
+      self.ser.write(cmd+"\n")
           
  
 

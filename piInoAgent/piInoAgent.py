@@ -22,11 +22,21 @@ configuration={}
 '''----------------------------------------------------------'''
 api = Flask("api")
 
+@api.route('/ipaem/api/v1.0/status', methods=['GET'])
+def get_status():
+    ls.writeCommand(":LS")
+    #TODO
+    if True:
+      helper.internalLogger.debug("lstest is requested")
+      rt=jsonify({'result': 'OK'})
+    else:
+      helper.internalLogger.debug("lstest ignored")
+    return rt
 
 @api.route('/ipaem/api/v1.0/lstest', methods=['GET'])
 def get_hotword():
     rt=jsonify({'result': 'KO'})
-    ls.putData()
+    ls.writeCommand(":LSd")
     if True:
       helper.internalLogger.debug("lstest is requested")
       rt=jsonify({'result': 'OK'})
@@ -38,9 +48,9 @@ def get_hotword():
 @api.route('/ipaem/api/v1.0/color', methods=['POST'])
 def post_localaction():
     rt=jsonify({'result': 'TODO'})
+    ls.writeCommand(":LSD") 
     if not request.json or not 'color' in request.json:
         abort(400)
-    #TBD 
     return rt, 201
 
 
@@ -91,7 +101,7 @@ def main(configfile):
                       configuration["ledStrip"]["timeout"]);
    
     while True:
-        ls.tryReconnect()
+        cmd=ls.readCommand()
         time.sleep(10) 
 
   except Exception as e:

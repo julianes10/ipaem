@@ -2,6 +2,10 @@
   "log": { "logTraces":"/tmp/ipaem.log",
            "logExceptions":"/tmp/ipaeme.log"
   },
+  "ledStrip": { "port":"/dev/ttyUSB1",
+                "speed":"9600",
+                "timeout":10
+  },
   "audios": {
               "bootNO":"/home/pi/audios/ongoing.wav",
               "ack":"/home/pi/audios/shortBeep.wav",
