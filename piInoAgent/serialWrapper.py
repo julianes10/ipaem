@@ -6,6 +6,8 @@ import os
 import time
 import serial
 import helper
+from colour import Color
+
 '''----------------------------------------------------------'''
 '''---------------- class led strip wrapper------------'''
 
@@ -16,6 +18,7 @@ class serialWrapper():
       self.speed=speed
       self.timeout=timeout
       self.ser=None
+      self.buffer=""
 
     def tryReconnect(self):
       self.ser=None
@@ -65,10 +68,11 @@ class serialWrapper():
           helper.einternalLogger.exception(e)
           self.ser=None
           return data
-        helper.internalLogger.debug("Got line, cool")                  
-        if line is not None: 
+        #helper.internalLogger.debug("Got line, cool")                  
+        if line is not None or line is "":
             try:
-              helper.internalLogger.debug("Something read yeah...:" + line)
+              helper.internalLogger.debug("RX>:" + line)
+              #TODO process the line
             except Exception as e:
               helper.internalLogger.debug("Error processing line. Ignoring it")
               e = sys.exc_info()[0]
@@ -87,6 +91,46 @@ class serialWrapper():
           time.sleep(10)
           return None;
       self.ser.write(cmd+"\n")
+
+    def flush(self):
+      self.writeCommand(self.buffer)
+      self.buffer=""
           
- 
+    def sendMode(self,mode):
+      helper.internalLogger.debug("Setup Mode: {0}".format(mode)) 
+      self.buffer+=":LM"+str(mode)
+
+    def sendColor(self,color):
+      c=Color(color)
+      aux=c.hex_l
+      helper.internalLogger.debug("Setup Color: {0}".format(aux)) 
+      self.buffer+=":LC"+aux[1:3]+","+aux[3:5]+","+aux[5:]
+
+
+    def sendTimeout(self,t):
+      helper.internalLogger.debug("Setup Timeout: {0}".format(t)) 
+      self.buffer+=":LT"+str(round(t/10))
+
+    def sendPause(self,t):
+      helper.internalLogger.debug("Setup Pause: {0}".format(t)) 
+      self.buffer+=":LP"+str(t)
+
+    def sendReset(self):
+      helper.internalLogger.debug("Setup Reset") 
+      self.buffer+=":LX"
+
+
+    def sendDebug(self,flag):
+      helper.internalLogger.debug("Setup Debug {0}".format(flag))
+      self.buffer+=":L"
+      if flag: 
+        self.buffer+="D"
+      else:
+        self.buffer+="d"
+
+    def sendStatus(self):
+      helper.internalLogger.debug("Ask status") 
+      self.buffer+=":LS"
+
+
 

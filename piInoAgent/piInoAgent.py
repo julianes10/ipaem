@@ -24,19 +24,8 @@ api = Flask("api")
 
 @api.route('/ipaem/api/v1.0/status', methods=['GET'])
 def get_status():
-    ls.writeCommand(":LS")
-    #TODO
-    if True:
-      helper.internalLogger.debug("lstest is requested")
-      rt=jsonify({'result': 'OK'})
-    else:
-      helper.internalLogger.debug("lstest ignored")
-    return rt
-
-@api.route('/ipaem/api/v1.0/lstest', methods=['GET'])
-def get_hotword():
-    rt=jsonify({'result': 'KO'})
-    ls.writeCommand(":LSd")
+    ls.sendStatus()
+    ls.flush()
     if True:
       helper.internalLogger.debug("lstest is requested")
       rt=jsonify({'result': 'OK'})
@@ -46,13 +35,78 @@ def get_hotword():
 
 
 @api.route('/ipaem/api/v1.0/color', methods=['POST'])
-def post_localaction():
-    rt=jsonify({'result': 'TODO'})
-    ls.writeCommand(":LSD") 
+def post_color():
+    rt=jsonify({'result': 'OK'})
     if not request.json or not 'color' in request.json:
         abort(400)
+    ls.sendColor(request.json['color']) 
+    ls.flush()
     return rt, 201
 
+@api.route('/ipaem/api/v1.0/mode', methods=['POST'])
+def post_mode():
+    rt=jsonify({'result': 'OK'})
+    if not request.json or not 'mode' in request.json:
+        abort(400)
+    ls.sendMode(request.json['mode']) 
+    ls.flush()
+    return rt, 201
+
+@api.route('/ipaem/api/v1.0/timeout', methods=['POST'])
+def post_timemout():
+    rt=jsonify({'result': 'OK'})
+    if not request.json or not 'timeout' in request.json:
+        abort(400)
+    ls.sendTimeout(request.json['timeout']) 
+    ls.flush()
+    return rt, 201
+
+@api.route('/ipaem/api/v1.0/pause', methods=['POST'])
+def post_pause():
+    rt=jsonify({'result': 'OK'})
+    if not request.json or not 'pause' in request.json:
+        abort(400)
+    ls.sendPause(request.json['pause']) 
+    ls.flush()
+    return rt, 201
+
+@api.route('/ipaem/api/v1.0/debug', methods=['POST'])
+def post_debug():
+    rt=jsonify({'result': 'OK'})
+    if not request.json or not 'debug' in request.json:
+        abort(400)
+    ls.sendDebug(request.json['debug']) 
+    ls.flush()
+    return rt, 201
+
+@api.route('/ipaem/api/v1.0/reset', methods=['POST'])
+def post_reset():
+    rt=jsonify({'result': 'OK'})
+    if not request.json or not 'reset' in request.json:
+        abort(400)
+    ls.sendReset() 
+    ls.flush()
+    return rt, 201
+
+@api.route('/ipaem/api/v1.0/misc', methods=['POST'])
+def post_misc():
+    rt=jsonify({'result': 'OK'})
+    if not request.json:
+        abort(400)
+    if 'mode' in request.json:
+      ls.sendMode(request.json['mode']) 
+    if 'color' in request.json:
+      ls.sendColor(request.json['color']) 
+    if 'pause' in request.json:
+      ls.sendPause(request.json['pause']) 
+    if 'timeout' in request.json:
+      ls.sendTimeout(request.json['timeout']) 
+    if 'debug' in request.json:
+      ls.sendDebug(request.json['debug']) 
+    if 'reset' in request.json:
+      ls.sendReset() 
+    ls.flush()
+    return rt, 201
 
 
 '''----------------------------------------------------------'''

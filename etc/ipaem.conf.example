@@ -2,7 +2,7 @@
   "log": { "logTraces":"/tmp/ipaem.log",
            "logExceptions":"/tmp/ipaeme.log"
   },
-  "ledStrip": { "port":"/dev/ttyUSB1",
+  "ledStrip": { "port":"/dev/ttyUSB0",
                 "speed":"9600",
                 "timeout":10
   },
