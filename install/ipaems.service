@@ -1,10 +1,10 @@
 [Unit]
-Description= IPAEM is a Intelligent Personal Asisstant for EM
+Description= IPAEM S is a Intelligent Personal Asisstant for EM usign snowboy software
 After=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/opt/ipaem/ipaem.s.sh
+ExecStart=/opt/ipaem/ipaem.s.sh 
 Restart=on-failure
 
 [Install]

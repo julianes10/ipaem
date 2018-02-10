@@ -1,5 +1,5 @@
 [Unit]
-Description= IPAEM is a Intelligent Personal Asisstant for EM
+Description= IPAEM G is a Intelligent Personal Asisstant for EM using GA sdk
 After=multi-user.target
 
 [Service]
