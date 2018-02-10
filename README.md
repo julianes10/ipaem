@@ -1,5 +1,14 @@
 # ipaem
-Small project to manage home devices exploring IPA technologies
+Small home project to manage home devices exploring IPA technologies
+
+With this software is possible:
+* command a raspberry pi with voice to
+  * listen preconfigured names radio stations using tuneIn ids 
+  * listen preconfigured music using youtube ids
+  * listen audios you ask for to youtube, go to next in the list and so on
+  * change lights mode and color of a arduino-controlled led strip
+* control led strip with an arduino communicated with your pi
+
 
 So far, the idea is having config file to trigger actions besides default actions from GA.
 In the config file will be possible run external commands, give feedback sound, etc
