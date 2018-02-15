@@ -68,8 +68,9 @@ class serialWrapper():
           helper.einternalLogger.exception(e)
           self.ser=None
           return data
-        #helper.internalLogger.debug("Got line, cool")                  
-        if line is not None or line is "":
+        #helper.internalLogger.debug("Got line, cool") 
+        line=line.strip('\n\r ')                 
+        if line is not None and line.strip is not "":
             try:
               helper.internalLogger.debug("RX>:" + line)
               #TODO process the line

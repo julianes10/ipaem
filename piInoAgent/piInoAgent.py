@@ -126,11 +126,11 @@ def main(configfile):
   with open(configfile) as json_data:
       configuration = json.load(json_data)
   #Get log names
-  if "log" in configuration:
-      if "logTraces" in configuration["log"]:
-        cfg_log_traces = configuration["log"]["logTraces"]
-      if "logExceptions" in configuration["log"]:
-        cfg_log_exceptions = configuration["log"]["logExceptions"]
+  if "logp" in configuration:
+      if "logTraces" in configuration["logp"]:
+        cfg_log_traces = configuration["logp"]["logTraces"]
+      if "logExceptions" in configuration["logp"]:
+        cfg_log_exceptions = configuration["logp"]["logExceptions"]
   helper.init(cfg_log_traces,cfg_log_exceptions)
   print('See logs traces in: {0} and exeptions in: {1}-----------'.format(cfg_log_traces,cfg_log_exceptions))  
   helper.internalLogger.critical('PIINOAGENT-start -------------------------------')  
