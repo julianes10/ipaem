@@ -177,9 +177,10 @@ def checkAnswer(rootActions,text,level,textStripped):
       helper.internalLogger.debug("Trying to match {0} on action {1}".format(text,key))
       if "input" not in item:
          continue
-      if text.lower() in item['input'] or item['input'] in text.lower():
+      for input in item['input']:
+       if text.lower() in input or input in text.lower():
          helper.internalLogger.debug("Action found over '{0}': {1}".format(text,key))
-         textStripped=textStripped.replace(item['input'],"",1)
+         textStripped=textStripped.replace(input,"",1)
          cmd=getCmd(actions,item,textStripped)
          runAction(cmd,getParam("background",actions,item))   
          rt1=getParam("next",actions,item)
