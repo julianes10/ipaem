@@ -8,7 +8,7 @@ User = pi
 Group = pi
 Type = simple
 ExecStart = /usr/bin/kodi
-Restart = on-abort
+Restart = always
 RestartSec = 5
 
 [Install]
