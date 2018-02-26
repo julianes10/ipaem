@@ -117,6 +117,25 @@
                           "on":       { "input": ["on"],     "arg1": "--on"},
                           "off":      { "input": ["off"],    "arg1": "--off"}
                         }
+                },
+      "Rss2speech":  {   "input":["latest news","read the news"],
+                    "output":
+                        {  
+    			                "background":true,
+                          "next" :"chat"
+                        },
+                    "nextLevel": 
+                        { 
+                          "commonOutput" : {
+                              "cmd": "/opt/ipaem/gaIpaDispatcher/rssWrapper.sh ARG1",
+    			                    "background":true,
+                              "feedback": "ack",
+                              "next" :"end" },
+                          "ElMundo": { "input": ["el mundo"],   "arg1": "http://estaticos.elmundo.es/elmundo/rss/portada.xml"}, 
+                          "ElPais":  { "input": ["el pais"],  "arg1": "http://ep00.epimg.net/rss/elpais/portada.xml"}, 
+                          "BBC":     { "input": ["bbc"],  "arg1": "http://feeds.bbci.co.uk/news/rss.xml"},
+                          "ElConfidencial": { "input": ["el confidencial"], "arg1": "https://rss.elconfidencial.com/espana/"}
+                        }
                 }
  }
 }

@@ -87,8 +87,11 @@ Lots of possibilities, some extra tuning for raspberry but still feasible.
 Not sure if GA will offer in the feature the ability to report a speech from a give text...
 apparently TTS free service was removed some time ago.
 It's true that in combination with IFTTT maybe a lot of things are possible, but what about having something simplier?
-Festival, Flite, pico2wave and eSpeak / eSpeak-ng seems to be the alternatives so far and all off them are straight forward of installing and test.
+Festival, Flite, pico2wave and eSpeak seems to be the alternatives so far and all off them are straight forward of installing and test.
 https://elinux.org/RPi_Text_to_Speech_(Speech_Synthesis)
+After testing them (see utils/tts/test.sh) my selection is -in order-:
+* for english is festival, picowave, flite and espeak.
+* for spanish festival put xx instead of ñ, WTF¡. So picowave is the best to me.
 
 ### SDR 
 One of the target is listen radio on Pi, interfacing of course using voice.

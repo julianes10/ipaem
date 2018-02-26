@@ -68,5 +68,8 @@ sudo apt-get install kodi
 sudo apt-get install minicom 
 sudo apt-get install arduino-mk 
 
+#TTC 
+sudo apt-get install libttspico-utils
+
  
 
