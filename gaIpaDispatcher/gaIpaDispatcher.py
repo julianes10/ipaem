@@ -115,13 +115,15 @@ def runAction(cmd,bg):
     return None
 
 '''----------------------------------------------------------'''
-'''----------------    muteLocalOutput      -----------------'''
-def muteLocalOutput(mute):
-  pass
-  label="mute"
-  if not mute:
-    label="unmute"
-  runAction("amixer -c 0 set PCM {0}".format(label),False)
+'''----------------    mute      -----------------'''
+def mute(m):
+  #pass
+  label="--mute"
+  if not m:
+    label="--unmute"
+  #LOCAL runAction("amixer -c 0 set PCM {0}".format(label),False)
+  runAction("/opt/ipaem/gaIpaDispatcher/KodiWrapper.sh {0}".format(label),False)
+
 
 
 '''----------------------------------------------------------'''
@@ -187,7 +189,7 @@ def checkAnswer(rootActions,text,level,textStripped):
          rt2=None
          if "nextLevel" in item:
             rt1,rt2=checkAnswer(rootActions,text,item["nextLevel"],textStripped) 
-         muteLocalOutput(False)     #TODO RADIO RECOVER¡¡¡ 
+         mute(False)     #TODO RADIO RECOVER¡¡¡ 
          fb=getParam("feedback",actions,item)
          playSound(fb,True)
          return rt1,rt2
@@ -206,20 +208,20 @@ def process_event(cfg_Actions,event,ga,level):
         ga.setBusy(True)
         helper.internalLogger.debug("Please say something, google is waiting for you")
         playSound("gawaiting")       
-        muteLocalOutput(True)     #TODO RADIO MUTE TOO¡¡¡  
+        mute(True)     #TODO RADIO MUTE TOO¡¡¡  
     elif event.type == EventType.ON_RECOGNIZING_SPEECH_FINISHED:
         helper.internalLogger.debug("Let's process what google say you have said")
         return checkAnswer(cfg_Actions,event.args['text'],level,"")
     elif event.type == EventType.ON_RESPONDING_STARTED:
-        muteLocalOutput(False)     #TODO RADIO NOT YET ¡¡¡ 
+        mute(False)     #TODO RADIO NOT YET ¡¡¡ 
     elif ( event.type == EventType.ON_RESPONDING_FINISHED or
            event.type == EventType.ON_NO_RESPONSE or
            event.type == EventType.ON_CONVERSATION_TURN_TIMEOUT
          ):
-        muteLocalOutput(False)     #TODO RADIO RECOVER¡¡¡ 
+        mute(False)     #TODO RADIO RECOVER¡¡¡ 
     elif event.type == EventType.ON_CONVERSATION_TURN_FINISHED:
         ga.setBusy(False)     
-        muteLocalOutput(False)     #TODO RADIO RECOVER¡¡¡ 
+        mute(False)     #TODO RADIO RECOVER¡¡¡ 
         playSound("gafinished")
     elif event.type == EventType.ON_ASSISTANT_ERROR and event.args and event.args['is_fatal']:
         helper.internalLogger.critical("Error, exiting")

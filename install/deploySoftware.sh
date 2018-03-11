@@ -5,6 +5,8 @@ PI_USER=pi
 PI_IPNAME=pi32
 PI_PORT=22
 
+IPAEM_SERVICES="ipaemg ipaems ipaemp ipaemb kodi noip2"
+
 
 echo "Here we go: $@"
 usage(){
@@ -97,7 +99,7 @@ elif [ "$1" == "remote" ]; then
     if [ $deployArduino -eq 1 ]; then
        DEPLOY_ARDUINO="cd /opt/ipaem/install && sudo ./deployArduino.sh;"
     fi
-    ssh -p $PI_PORT pi@$PI_IPNAME "sudo systemctl stop ipaemg ipaems ipaemp ipaemb kodi noip2;sudo rm -rf $DEPLOY_FOLDER; sudo mv /home/pi/ipaem.tmp $DEPLOY_FOLDER;$DEPLOY_CONFIG sudo systemctl start ipaemg ipaems kodi noip2;sudo systemctl status ipaemg ipaems ipaemp ipaemb kodi noip2;$DEPLOY_ARDUINO"
+    ssh -p $PI_PORT pi@$PI_IPNAME "sudo systemctl stop $IPAEM_SERVICES;sudo rm -rf $DEPLOY_FOLDER; sudo mv /home/pi/ipaem.tmp $DEPLOY_FOLDER;$DEPLOY_CONFIG sudo systemctl start $IPAEM_SERVICES;sudo systemctl status $IPAEM_SERVICES;$DEPLOY_ARDUINO"
   else
     echo "ERROR: no extra option selected for deployed remotely"
     usage

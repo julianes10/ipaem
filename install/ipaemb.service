@@ -1,0 +1,14 @@
+[Unit]
+Description= IPAEM B is a Intelligent Personal Asisstant for EM just touch a shock sensor connected to GPIO to awake the beast GA
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/opt/ipaem/gpioHotword/gpioHotword.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+
+
