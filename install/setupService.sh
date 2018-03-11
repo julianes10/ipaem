@@ -22,11 +22,13 @@ cp -rf ../etc/HIDDEN.asoundrc /home/pi/.asoundrc
 cp -rf ipaemg.service /lib/systemd/system/ipaemg.service
 cp -rf ipaems.service /lib/systemd/system/ipaems.service
 cp -rf ipaemp.service /lib/systemd/system/ipaemp.service
+cp -rf ipaemb.service /lib/systemd/system/ipaemb.service
 cp -rf kodi.service /lib/systemd/system/kodi.service
 cp -rf noip2.service /lib/systemd/system/noip2.service
 chmod 644 /lib/systemd/system/ipaemg.service
 chmod 644 /lib/systemd/system/ipaems.service
 chmod 644 /lib/systemd/system/ipaemp.service
+chmod 644 /lib/systemd/system/ipaemb.service
 chmod 644 /lib/systemd/system/kodi.service
 chmod 644 /lib/systemd/system/noip2.service
 
@@ -35,18 +37,21 @@ systemctl daemon-reload
 systemctl enable ipaemg.service
 systemctl enable ipaems.service
 systemctl enable ipaemp.service
+systemctl enable ipaemb.service
 systemctl enable kodi.service
 systemctl enable noip2.service
 
 systemctl start ipaemg.service
 systemctl start ipaems.service
 systemctl start ipaemp.service
+systemctl start ipaemb.service
 systemctl start kodi.service
 systemctl start noip2.service
 
 systemctl status ipaemg.service
 systemctl status ipaems.service
 systemctl status ipaemp.service
+systemctl status ipaemb.service
 systemctl status kodi.service
 systemctl status noip2.service
 

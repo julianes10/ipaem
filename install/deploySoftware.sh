@@ -97,7 +97,7 @@ elif [ "$1" == "remote" ]; then
     if [ $deployArduino -eq 1 ]; then
        DEPLOY_ARDUINO="cd /opt/ipaem/install && sudo ./deployArduino.sh;"
     fi
-    ssh -p $PI_PORT pi@$PI_IPNAME "sudo systemctl stop ipaemg ipaems ipaemp kodi noip2;sudo rm -rf $DEPLOY_FOLDER; sudo mv /home/pi/ipaem.tmp $DEPLOY_FOLDER;$DEPLOY_CONFIG sudo systemctl start ipaemg ipaems kodi noip2;sudo systemctl status ipaemg ipaems ipaemp kodi noip2;$DEPLOY_ARDUINO"
+    ssh -p $PI_PORT pi@$PI_IPNAME "sudo systemctl stop ipaemg ipaems ipaemp ipaemb kodi noip2;sudo rm -rf $DEPLOY_FOLDER; sudo mv /home/pi/ipaem.tmp $DEPLOY_FOLDER;$DEPLOY_CONFIG sudo systemctl start ipaemg ipaems kodi noip2;sudo systemctl status ipaemg ipaems ipaemp ipaemb kodi noip2;$DEPLOY_ARDUINO"
   else
     echo "ERROR: no extra option selected for deployed remotely"
     usage

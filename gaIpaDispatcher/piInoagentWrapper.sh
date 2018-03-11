@@ -47,7 +47,7 @@ function setMode
             exit 1
        esac
 
-  curl -i -H "Content-Type: application/json" -X POST -d '{"mode":"'$m'","color":"'$c'","pause":"'$p'","timeout":"'$t'"}' http://localhost:5001/ipaem/api/v1.0/misc
+  curl -i -H "Content-Type: application/json" -X POST -d '{"mode":"'$m'","color":"'$c'","pause":'$p',"timeout":'$t'}' http://localhost:5001/ipaem/api/v1.0/misc
   echo $t >/tmp/pinoAgent.t
   echo $p >/tmp/pinoAgent.p
 
@@ -57,20 +57,27 @@ function setPause
 {
   p=$1
   p0=`cat /tmp/pinoAgent.p`
+  step=100 
+  if (( p0 < 100 )); then
+    step=10   
+  fi
   
   case "$1" in
         quicker)
-            p=$(( p + 100 ))
+
+            p=$(( p0 - step ))
             ;;         
         slower)
-            p=$(( p - 100 ))
+            p=$(( p0 + step ))
             ;;           
         *)
+            p=$1
             echo $"Try with a number"
        esac
   echo $p >/tmp/pinoAgent.p
-  echo "Setting up pause to: \"$p\"..."
-  curl -i -H "Content-Type: application/json" -X POST -d '{"pause":"'$1'"}' http://localhost:5001/ipaem/api/v1.0/pause
+
+  echo $"Setting up pause from \"$p0\" to: \"$p\"..."
+  curl -i -H "Content-Type: application/json" -X POST -d '{"pause":'$p'}' http://localhost:5001/ipaem/api/v1.0/pause
 } 
 
 ################################################
@@ -83,6 +90,7 @@ function setColor
 ################################################
 function turnOn 
 {
+  turnOff
   setColor "white"
 } 
 ################################################

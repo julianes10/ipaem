@@ -110,11 +110,11 @@ class serialWrapper():
 
     def sendTimeout(self,t):
       helper.internalLogger.debug("Setup Timeout: {0}".format(t)) 
-      self.buffer+=":LT"+str(round(t/10))
+      self.buffer+=":LT"+str(round(t/10)).zfill(4)
 
     def sendPause(self,t):
       helper.internalLogger.debug("Setup Pause: {0}".format(t)) 
-      self.buffer+=":LP"+str(t)
+      self.buffer+=":LP"+str(t).zfill(4)
 
     def sendReset(self):
       helper.internalLogger.debug("Setup Reset") 
