@@ -10,9 +10,23 @@ import RPi.GPIO as GPIO
 interrupted = False
 
 def hotword_handler(arg1):
-    print('-handler')   
-    p=subprocess.Popen(['bash','-c',"curl -i http://localhost:5000/ipaem/api/v1.0/hotword"])
-    p.wait()
+    values=[]
+    values.append(GPIO.input(11))
+    for num in range(1,30):
+      time.sleep(0.01)    
+      values.append(GPIO.input(11)) 
+      #if (aux == True):
+      #   return
+    
+    #if we are still here, falling is consistent
+    print('- gpio values: {0}'.format(values))   
+    for index, item in enumerate(values):
+      if item==0:
+        print('- VALID FALLING GPIO')   
+        p=subprocess.Popen(['bash','-c',"curl -i -H \"Content-Type: application/json\" -X POST -d  '{\"debug\":\"shock sensor\"}' http://localhost:5000/ipaem/api/v1.0/hotword"])
+        p.wait()
+        return  
+
 
 def signal_handler(signal, frame):
     global interrupted

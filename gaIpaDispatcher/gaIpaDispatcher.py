@@ -52,9 +52,12 @@ from collections import OrderedDict
 api = Flask("api")
 
 
-@api.route('/ipaem/api/v1.0/hotword', methods=['GET'])
+@api.route('/ipaem/api/v1.0/hotword', methods=['POST'])
 def get_hotword():
     rt=jsonify({'result': 'KO'})
+    if request.json and 'debug' in request.json:
+      helper.internalLogger.debug("REST hotword debug: {}".format(request.json['debug']))
+   
     if ga.getBusy()==False:
       helper.internalLogger.debug("Alternative hotword")
       assistant.start_conversation()
@@ -189,7 +192,7 @@ def checkAnswer(rootActions,text,level,textStripped):
          rt2=None
          if "nextLevel" in item:
             rt1,rt2=checkAnswer(rootActions,text,item["nextLevel"],textStripped) 
-         mute(False)     #TODO RADIO RECOVER¡¡¡ 
+         mute(False)     
          fb=getParam("feedback",actions,item)
          playSound(fb,True)
          return rt1,rt2
@@ -208,20 +211,20 @@ def process_event(cfg_Actions,event,ga,level):
         ga.setBusy(True)
         helper.internalLogger.debug("Please say something, google is waiting for you")
         playSound("gawaiting")       
-        mute(True)     #TODO RADIO MUTE TOO¡¡¡  
+        mute(True)      
     elif event.type == EventType.ON_RECOGNIZING_SPEECH_FINISHED:
         helper.internalLogger.debug("Let's process what google say you have said")
         return checkAnswer(cfg_Actions,event.args['text'],level,"")
     elif event.type == EventType.ON_RESPONDING_STARTED:
-        mute(False)     #TODO RADIO NOT YET ¡¡¡ 
+        mute(False)      
     elif ( event.type == EventType.ON_RESPONDING_FINISHED or
            event.type == EventType.ON_NO_RESPONSE or
            event.type == EventType.ON_CONVERSATION_TURN_TIMEOUT
          ):
-        mute(False)     #TODO RADIO RECOVER¡¡¡ 
+        mute(False)     
     elif event.type == EventType.ON_CONVERSATION_TURN_FINISHED:
         ga.setBusy(False)     
-        mute(False)     #TODO RADIO RECOVER¡¡¡ 
+        mute(False)      
         playSound("gafinished")
     elif event.type == EventType.ON_ASSISTANT_ERROR and event.args and event.args['is_fatal']:
         helper.internalLogger.critical("Error, exiting")

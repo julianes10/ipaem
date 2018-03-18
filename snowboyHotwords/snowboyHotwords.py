@@ -9,9 +9,9 @@ from threading import Timer
 
 interrupted = False
 
-def hotword_handler():
-    print("Alternative hotword detected");
-    p=subprocess.Popen(['bash','-c',"curl -i http://localhost:5000/ipaem/api/v1.0/hotword"])
+def hotword_handler(model):
+    print("Alternative hotword detected {}".format(model));
+    curl="curl -i -H \"Content-Type: application/json\" -X POST -d  '{\"debug\":\"snowboy "+model+"\"}' http://localhost:5000/ipaem/api/v1.0/hotword"
     p.wait()
 
 def signal_handler(signal, frame):
@@ -36,8 +36,8 @@ signal.signal(signal.SIGINT, signal_handler)
 churri_is_said = False
 sensitivity = [0.3]*len(models)
 detector = snowboydecoder.HotwordDetector(models, sensitivity=sensitivity)
-callbacks = [lambda: hotword_handler(),
-             lambda: hotword_handler()]
+callbacks = [lambda: hotword_handler("model1"),
+             lambda: hotword_handler("model2")]
 print('Listening... Press Ctrl+C to exit')
 
 # main loop
