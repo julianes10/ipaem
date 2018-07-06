@@ -216,6 +216,7 @@ def process_event(cfg_Actions,event,ga,level):
         helper.internalLogger.debug("Let's process what google say you have said")
         return checkAnswer(cfg_Actions,event.args['text'],level,"")
     elif event.type == EventType.ON_RESPONDING_STARTED:
+        helper.internalLogger.debug("Please say something, google is waiting for you")
         mute(False)      
     elif ( event.type == EventType.ON_RESPONDING_FINISHED or
            event.type == EventType.ON_NO_RESPONSE or
