@@ -1,37 +1,60 @@
 # ipaem
-Small home project to manage home devices exploring IPA technologies and others
-Using rapsberry pi and a arduino.
+Just for fun custom personal assistance project. 
+An excuse for explore IPA technologies and others stuff.
+
+List of materials is a rapsberry pi 3 and a arduino nano (or one can be used to) plus a set of sensors and peripherls like dht11/22, light sensor, let stript, shock sensor and maybe others coming.
+
 
 With this software is possible:
-* Command a raspberry pi with voice to
-  * listen preconfigured names radio stations using tuneIn ids 
-  * listen preconfigured music using youtube ids
-  * listen audios you ask for to youtube, go to next in the list and so on
-  * change lights mode and color of a arduino-controlled led strip
-* Control led strip with an arduino communicated with your pi and some sensor
-* Read Out with TTS:
-  * rss news with TTS
-  * local sensors temperature TTS
 * Trigger voice commands using google hotword, others using snowboy or other input sensor
+* Listen (apart from what amazing google assistant already provide):
+  * radio stations (using tuneIn) 
+  * music/audios (using youtube)
+  * news (TTS from RSS feeds)
+  * (in progress) local temperature from several sensors
+  * (in progress) custom weather forecast details to specific hours or wind status. 
+* Control led strip with an arduino communicated with your pi and some sensor
+  * change lights mode and color of a arduino-controlled led strip
+* start GA interaction using other inputs as standard "ok google".
 
 So far, the idea is having config file to trigger actions besides default actions from GA.
-In the config file will be possible run external commands, give feedback sound, etc
+
+In the config file will be possible run external commands, custom feedback sound to easy interact with the system. 
 
 ## Instalation
 Follow requirements.txt instruction to install from a vanilla raspbian without desktop.
 
-Download or clone this repo and: 
+### Local instalation
+Download or clone this repo in your target pi and execute:
+<pre>
 cd ipaem/install
-sudo ./install local
+sudo ./deploySofware.sh local
 cd /opt/ipaem/install
 sudo ./setupService.sh
+</pre>
+
 It will setup several services e.g ipaemg (tuned google assistant app) and ipaems (snowboy alternatives hot words)
 Config file is in /etc/ipaem/ you can custome it
 
-Remote local instalation from your laptop to your pi is possible with "remote local [arduino] [config]" arguments.
+### Remote instalation or install from your development host
+Remote instalation from your laptop is possible:
+* Download repo in your host 
+* Custom your pi connectiviy parameters in install/deploySoftware.sh file (PI_USER,IP or NAME and PIPORT). Ssh,scp wil be used for command and copying files.
+* Run:
+<pre>
+cd ipaem/install
+./deploySoftware.sh remote local [arduino] [config]. 
+</pre>
+If you include arduino, firmware will be updated too. If you include config, example config will be replace config files in /etc/ipaem/
+
+Later only if never done before or you know that something has changed regards startup, ssh your pi manually and do:
+<pre>
+cd /opt/ipaem/install
+sudo ./setupService.sh
+</pre>
+
 
 ## Source code walkthrough
-TODO, complete¡¡¡
 
 ### Install 
 Stuff for deploying the software and create a service
@@ -116,15 +139,17 @@ Finally disregard this option (not investigated really), tunein pluggin on top o
 * [TTS analisys from elinux.org](https://elinux.org/RPi_Text_to_Speech_(Speech_Synthesis))
 
 
-## hw
-dht11: GPI04=PIN7
+## Hardware details
+TODO TODO TODO
+dht11: pi GPI04=PIN7
 IR1: GPI17=PIN11
 IR2: GPI27=PIN13
-## TODO
-Upload sounds
 
-dockerizate it
-
+## TODO LIST
+* Document better
+* Describe how to tune sounds
+* Dockerizate solution
+* ... lots of improvement for fun¡
 
 
 

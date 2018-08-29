@@ -176,7 +176,7 @@ def loggingEnd():
 '''----------------------------------------------------------'''
 '''----------------     apirest_task      -------------------'''
 def apirest_task():
-  api.run(debug=True, use_reloader=False,port=5001)
+  api.run(debug=True, use_reloader=False,port=5001,host='0.0.0.0')
 
 '''----------------------------------------------------------'''
 '''----------------     parse_args        -------------------'''

@@ -49,6 +49,7 @@ void setup() {
   GLBserialInputString[0]=0;
 
   GLBptrStateFunc = STATE_init;
+  Serial.println(F("STATE INIT"));
   
 }
 
@@ -75,7 +76,6 @@ void processSerialInputString()
   LSEM.processCommands(GLBauxString);
 }
 //-------------------------------------------------
-//-------------------------------------------------
 void STATE_init(void)
 {
   Serial.println(F("DEBUG: inputBootString..."));
@@ -83,12 +83,14 @@ void STATE_init(void)
   LSEM.processCommands(GLBauxString);
 
   GLBptrStateFunc=STATE_welcome;
+  Serial.println(F("STATE INIT -> WELCOME"));
 }
 //-------------------------------------------------
 void STATE_welcome(void)
 {
   if (LSEM.isIdle()) {
     GLBptrStateFunc=STATE_idle;
+    Serial.println(F("STATE WELCOME -> IDLE"));
   }
 }
 //-------------------------------------------------
@@ -97,6 +99,7 @@ void STATE_idle(void)
   if (GLBserialInputStringReady){
     processSerialInputString();
     GLBptrStateFunc=STATE_LDcmd;
+    Serial.println(F("STATE IDLE -> LD CMD"));
   }
   else if ( GLBisDark &&
             ( (GLBpirInfo==PIR_INFO_LOW2HIGH) ||  
@@ -105,6 +108,8 @@ void STATE_idle(void)
     strcpy_P(GLBauxString,(char*)inputPIRLOW2HIGHstring);
     LSEM.processCommands(GLBauxString);
     GLBptrStateFunc=STATE_LDPIRon;
+    Serial.println(F("STATE IDLE -> LD PIR ON"));
+
   }  
 }
 //-------------------------------------------------
@@ -113,6 +118,7 @@ void STATE_LDPIRon(void)
   if (GLBserialInputStringReady){
     processSerialInputString();
     GLBptrStateFunc=STATE_LDcmd;
+    Serial.println(F("STATE LD PIR ON -> LD CMD"));
   }
   else if ( (GLBpirInfo==PIR_INFO_HIGH2LOW) ||  
             (GLBpirInfo==PIR_INFO_LOW2LOW) ){
@@ -120,6 +126,7 @@ void STATE_LDPIRon(void)
     strcpy_P(GLBauxString,(char*)inputPIRHIGH2LOWstring);
     LSEM.processCommands(GLBauxString);
     GLBptrStateFunc=STATE_LDPIRoff;
+    Serial.println(F("STATE LD PIR ON -> LD PIR OFF"));
   }
 }
 //-------------------------------------------------
@@ -128,6 +135,7 @@ void STATE_LDPIRoff(void)
   if (GLBserialInputStringReady){
     processSerialInputString();
     GLBptrStateFunc=STATE_LDcmd;
+    Serial.println(F("STATE LD PIR OFF -> LD CMD"));
   }
   else if ( (GLBpirInfo==PIR_INFO_LOW2HIGH) ||  
             (GLBpirInfo==PIR_INFO_HIGH2HIGH) ){
@@ -135,6 +143,7 @@ void STATE_LDPIRoff(void)
     strcpy_P(GLBauxString,(char*)inputPIRBack2HIGHstring);
     LSEM.processCommands(GLBauxString);
     GLBptrStateFunc=STATE_LDPIRon;
+    Serial.println(F("STATE LD PIR OFF -> LD PIR ON"));
   }
 }
 //-------------------------------------------------
@@ -145,6 +154,7 @@ void STATE_LDcmd(void)
   }
   else if (LSEM.isIdle()) {
     GLBptrStateFunc=STATE_idle;
+    Serial.println(F("STATE LD CMD -> IDLE"));
   }
 }
 
