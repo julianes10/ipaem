@@ -4,6 +4,13 @@
 #include "photoResistor.h"
 
 
+//-- SOME NEEDED PROTOTYPES ---------------------------
+
+void GLBcallbackTimeoutLS(void);
+void GLBcallbackPauseLS(void);
+
+
+
 //------------------------------------------------
 //--- GLOBAL VARIABLES ---------------------------
 //------------------------------------------------
@@ -20,6 +27,14 @@ const char inputPIRBack2HIGHstring[] PROGMEM = {":LCFF,FF,FF:LT0000:LMA"};
 
 int GLBpirInfo=0;
 bool GLBisDark=true;
+
+
+#define NUM_LEDS 46
+#define DATA_PIN_LS 7
+CRGB myLs[NUM_LEDS];
+
+LSEM ls(myLs, NUM_LEDS, GLBcallbackPauseLS, GLBcallbackTimeoutLS);
+
 
 
 //------------------------------------------------
@@ -40,6 +55,25 @@ void (*GLBptrStateFunc)();
 
 
 //------------------------------------------------
+//-------    TIMER CALLBACKS     -----------------
+//------------------------------------------------
+void GLBcallbackTimeoutLS(void)
+{
+  //if (LSEM.getDebug()) {Serial.println(F("DEBUG: callbackTimeout"));}
+  ls.callbackTimeout();
+}
+//------------------------------------------------
+void GLBcallbackPauseLS(void)
+{
+  //Serial.println(F("DEBUG: callbackPause");
+  ls.callbackPause();
+}
+
+
+//------------------------------------------------
+
+
+//------------------------------------------------
 
 void setup() { 
 
@@ -50,6 +84,7 @@ void setup() {
 
   GLBptrStateFunc = STATE_init;
   Serial.println(F("STATE INIT"));
+  FastLED.addLeds<WS2812B,DATA_PIN_LS,GRB>(myLs, NUM_LEDS);
   
 }
 
@@ -73,14 +108,14 @@ void processSerialInputString()
   strcpy(GLBauxString,GLBserialInputString);
   GLBserialInputString[0]=0;
   GLBserialInputStringReady = false;
-  LSEM.processCommands(GLBauxString);
+  ls.processCommands(GLBauxString);
 }
 //-------------------------------------------------
 void STATE_init(void)
 {
   Serial.println(F("DEBUG: inputBootString..."));
   strcpy_P(GLBauxString,(char*)inputBootString);
-  LSEM.processCommands(GLBauxString);
+  ls.processCommands(GLBauxString);
 
   GLBptrStateFunc=STATE_welcome;
   Serial.println(F("STATE INIT -> WELCOME"));
@@ -88,7 +123,7 @@ void STATE_init(void)
 //-------------------------------------------------
 void STATE_welcome(void)
 {
-  if (LSEM.isIdle()) {
+  if (ls.isIdle()) {
     GLBptrStateFunc=STATE_idle;
     Serial.println(F("STATE WELCOME -> IDLE"));
   }
@@ -106,7 +141,7 @@ void STATE_idle(void)
               (GLBpirInfo==PIR_INFO_HIGH2HIGH) )  ) {
     Serial.println(F("DEBUG: inputPIRLOW2HIGHstring..."));
     strcpy_P(GLBauxString,(char*)inputPIRLOW2HIGHstring);
-    LSEM.processCommands(GLBauxString);
+    ls.processCommands(GLBauxString);
     GLBptrStateFunc=STATE_LDPIRon;
     Serial.println(F("STATE IDLE -> LD PIR ON"));
 
@@ -124,7 +159,7 @@ void STATE_LDPIRon(void)
             (GLBpirInfo==PIR_INFO_LOW2LOW) ){
     Serial.println(F("DEBUG: inputPIRHIGH2LOWstring..."));
     strcpy_P(GLBauxString,(char*)inputPIRHIGH2LOWstring);
-    LSEM.processCommands(GLBauxString);
+    ls.processCommands(GLBauxString);
     GLBptrStateFunc=STATE_LDPIRoff;
     Serial.println(F("STATE LD PIR ON -> LD PIR OFF"));
   }
@@ -141,7 +176,7 @@ void STATE_LDPIRoff(void)
             (GLBpirInfo==PIR_INFO_HIGH2HIGH) ){
     Serial.println(F("DEBUG: inputPIRBack2HIGHstring..."));
     strcpy_P(GLBauxString,(char*)inputPIRBack2HIGHstring);
-    LSEM.processCommands(GLBauxString);
+    ls.processCommands(GLBauxString);
     GLBptrStateFunc=STATE_LDPIRon;
     Serial.println(F("STATE LD PIR OFF -> LD PIR ON"));
   }
@@ -152,7 +187,7 @@ void STATE_LDcmd(void)
   if (GLBserialInputStringReady){
     processSerialInputString();
   }
-  else if (LSEM.isIdle()) {
+  else if (ls.isIdle()) {
     GLBptrStateFunc=STATE_idle;
     Serial.println(F("STATE LD CMD -> IDLE"));
   }
@@ -179,8 +214,8 @@ void loop() {
 
   // ------------- OUTPUT REFRESHING ---------------
   // Write led strip
-  LSEM.refresh();
-
+  ls.refresh();
+  FastLED.show();
   // Write motor 
   //TODO
 
