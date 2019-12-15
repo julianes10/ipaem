@@ -27,21 +27,22 @@ int PIREM::refresh(void)
   aux = digitalRead(DATA_PIN_PIR);   
   //Serial.print(aux);
   if (aux==HIGH){
+    //new Fresh value is HIGH
     if (_status)  {   rt=PIR_INFO_HIGH2HIGH;}
     else          {   
                       rt=PIR_INFO_LOW2HIGH;   
                       Serial.println("PIR_INFO_LOW2HIGH");
-                      _status=true;
                   }
   }
-  else { // (aux==LOW){
+  else { 
+    //new Fresh value is LOW
     if (_status)  {   
                       rt=PIR_INFO_HIGH2LOW;   
                       Serial.println("PIR_INFO_HIGH2LOW");
-                      _status=false;
                   }
     else          {   rt=PIR_INFO_LOW2LOW;}
   }
+  _status=aux;
   return rt;
 }
 

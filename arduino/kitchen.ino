@@ -21,9 +21,11 @@ bool    GLBserialInputStringReady = false; // whether the string is complete
 
 const char inputBootString[] PROGMEM ={":LP0020:LT0005:LMK:LCFF,00,00:LQ:LMk:LQ:LMN"};
 
-const char inputPIRLOW2HIGHstring[]  PROGMEM = {":LT0020:LP0200:LMN:LQ:LCFF,FF,FF:LT0000:LMA"};
-const char inputPIRHIGH2LOWstring[]  PROGMEM = {":LCFF,FF,FF:LT0030:LMA:LQ:LT0050:LP0500:LMN"};
+const char inputPIRLOW2HIGHstring[]  PROGMEM = {":LC44,44,FF:LT0010:LP0002:LMK:LQ:LCFF,FF,FF:LT0000:LMA"};
+const char inputPIRHIGH2LOWstring[]  PROGMEM = {":LCEE,EE,EE:LT0070:LMA:LQ:LC33,33,33:LT0070:LMA"};
 const char inputPIRBack2HIGHstring[] PROGMEM = {":LCFF,FF,FF:LT0000:LMA"};
+
+
 
 int GLBpirInfo=0;
 bool GLBisDark=true;
@@ -35,6 +37,7 @@ CRGB myLs[NUM_LEDS];
 
 LSEM ls(myLs, NUM_LEDS, GLBcallbackPauseLS, GLBcallbackTimeoutLS);
 
+unsigned long time;
 
 
 //------------------------------------------------
@@ -161,6 +164,7 @@ void STATE_LDPIRon(void)
     strcpy_P(GLBauxString,(char*)inputPIRHIGH2LOWstring);
     ls.processCommands(GLBauxString);
     GLBptrStateFunc=STATE_LDPIRoff;
+    time = millis();
     Serial.println(F("STATE LD PIR ON -> LD PIR OFF"));
   }
 }
@@ -179,6 +183,14 @@ void STATE_LDPIRoff(void)
     ls.processCommands(GLBauxString);
     GLBptrStateFunc=STATE_LDPIRon;
     Serial.println(F("STATE LD PIR OFF -> LD PIR ON"));
+  }
+  else {
+    unsigned long timenow;
+    timenow = millis();
+    if ((timenow - time) > 25000) {
+      GLBptrStateFunc=STATE_idle;
+      Serial.println(F("STATE LD PIR OFF -> IDLE"));
+    }
   }
 }
 //-------------------------------------------------
@@ -205,7 +217,7 @@ void loop() {
   GLBpirInfo=PIREM.refresh();
 
   // Read light sensor
-  GLBisDark=PR.refresh();
+  // TODO GLBisDark=PR.refresh();
 
   //--------- TIME TO THINK MY FRIEND -------------
   // State machine as main controller execution
@@ -217,6 +229,6 @@ void loop() {
   ls.refresh();
   FastLED.show();
   // Write motor 
-  //TODO
+  // TODO
 
 }
