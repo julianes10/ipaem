@@ -1,4 +1,4 @@
-# ipaem
+# ipaem  (ABANDONED PROJECT)
 Just for fun custom personal assistance project. 
 An excuse for explore IPA technologies and others stuff.
 
